@@ -24,11 +24,13 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::logind::{Seat, SessionInfo, User};
+use crate::types::{DbusPath, ScheduledShutdown, SessionInfo, UserInfo};
 
-#[dbus_proxy(interface = "org.freedesktop.login1.Manager",
+#[dbus_proxy(
+    interface = "org.freedesktop.login1.Manager",
     default_service = "org.freedesktop.login1",
-    default_path = "/org/freedesktop/login1")]
+    default_path = "/org/freedesktop/login1"
+)]
 trait Manager {
     /// ActivateSession method
     fn activate_session(&self, session_id: &str) -> zbus::Result<()>;
@@ -150,15 +152,13 @@ trait Manager {
     fn list_inhibitors(&self) -> zbus::Result<Vec<(String, String, String, String, u32, u32)>>;
 
     /// ListSeats method
-    fn list_seats(&self) -> zbus::Result<Vec<Seat>>;
+    fn list_seats(&self) -> zbus::Result<Vec<DbusPath>>;
 
     /// ListSessions method
-    fn list_sessions(
-        &self,
-    ) -> zbus::Result<Vec<SessionInfo>>;
+    fn list_sessions(&self) -> zbus::Result<Vec<SessionInfo>>;
 
     /// ListUsers method
-    fn list_users(&self) -> zbus::Result<Vec<User>>;
+    fn list_users(&self) -> zbus::Result<Vec<UserInfo>>;
 
     /// LockSession method
     fn lock_session(&self, session_id: &str) -> zbus::Result<()>;
@@ -273,6 +273,7 @@ trait Manager {
     /// EnableWallMessages property
     #[dbus_proxy(property)]
     fn enable_wall_messages(&self) -> zbus::Result<bool>;
+    
     #[DBusProxy(property)]
     fn set_enable_wall_messages(&self, value: bool) -> zbus::Result<()>;
 
@@ -400,9 +401,9 @@ trait Manager {
     #[dbus_proxy(property)]
     fn runtime_directory_size(&self) -> zbus::Result<u64>;
 
-    // /// ScheduledShutdown property
-    // #[dbus_proxy(property)]
-    // fn scheduled_shutdown(&self) -> zbus::Result<(String, u64)>;
+    /// ScheduledShutdown property
+    #[dbus_proxy(property)]
+    fn scheduled_shutdown(&self) -> zbus::Result<ScheduledShutdown>;
 
     /// SessionsMax property
     #[dbus_proxy(property)]
