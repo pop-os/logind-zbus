@@ -5,6 +5,7 @@ use zbus::{Proxy, Result};
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
+use zvariant::OwnedObjectPath;
 
 use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, UserInfo, UserState}};
 /// Proxy wrapper for the logind `User` dbus interface
@@ -115,6 +116,11 @@ impl<'a> UserInterface<'a> {
         self._inner.service()
     }
 
+    // #[inline]
+    // pub fn get_sessions(&self) -> Result<Vec<String>> {
+    //     self._inner.sessions()
+    // }
+
     /// Property: unit name of the user systemd slice of this user. Each logged
     /// in user gets a private slice.
     #[inline]
@@ -185,6 +191,7 @@ mod tests {
         assert!(user.get_runtime_path().is_ok());
         assert!(user.get_service().is_ok());
         assert!(user.get_slice().is_ok());
+        //assert!(user.get_sessions().is_ok());
         assert!(user.get_state().is_ok());
         assert!(user.get_timestamp().is_ok());
         assert!(user.get_timestamp_monotonic().is_ok());

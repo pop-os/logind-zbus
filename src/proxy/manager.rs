@@ -5,10 +5,13 @@ use zbus::{Proxy, Result};
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
+use zvariant::OwnedObjectPath;
 
 use crate::{generated::manager, types::{DbusPath, IsSupported, ScheduledShutdown, SessionInfo, ShutdownType, UserInfo}};
 
 pub(crate) type CallbackBool = fn(bool) -> std::result::Result<(), zbus::Error>;
+pub(crate) type CallbackStrPath = fn(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error>;
+pub(crate) type CallbackU32Path = fn(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error>;
 
 /// Proxy wrapper for the logind `Manager` dbus interface
 ///
@@ -554,6 +557,84 @@ impl<'a> ManagerInterface<'a> {
     #[inline]
     pub fn disconnect_prepare_for_sleep_signal(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_prepare_for_sleep()
+    }
+
+    #[inline]
+    pub fn connect_new_seat_signal(
+        &self,
+        callback: CallbackStrPath,
+    ) -> zbus::fdo::Result<()> {
+        self._inner.connect_seat_new(callback)
+    }
+
+    #[inline]
+    pub fn disconnect_new_seat_signal(&self) -> zbus::fdo::Result<bool> {
+        self._inner.disconnect_seat_new()
+    }
+
+    #[inline]
+    pub fn connect_seat_removed_signal(
+        &self,
+        callback: CallbackStrPath,
+    ) -> zbus::fdo::Result<()> {
+        self._inner.connect_seat_removed(callback)
+    }
+
+    #[inline]
+    pub fn disconnect_seat_removed_signal(&self) -> zbus::fdo::Result<bool> {
+        self._inner.disconnect_seat_removed()
+    }
+
+    #[inline]
+    pub fn connect_new_session_signal(
+        &self,
+        callback: CallbackStrPath,
+    ) -> zbus::fdo::Result<()> {
+        self._inner.connect_session_new(callback)
+    }
+
+    #[inline]
+    pub fn disconnect_new_session_signal(&self) -> zbus::fdo::Result<bool> {
+        self._inner.disconnect_session_new()
+    }
+
+    #[inline]
+    pub fn connect_session_removed_signal(
+        &self,
+        callback: CallbackStrPath,
+    ) -> zbus::fdo::Result<()> {
+        self._inner.connect_session_removed(callback)
+    }
+
+    #[inline]
+    pub fn disconnect_session_removed_signal(&self) -> zbus::fdo::Result<bool> {
+        self._inner.disconnect_session_removed()
+    }
+
+    #[inline]
+    pub fn connect_new_user_signal(
+        &self,
+        callback: CallbackU32Path,
+    ) -> zbus::fdo::Result<()> {
+        self._inner.connect_user_new(callback)
+    }
+
+    #[inline]
+    pub fn disconnect_new_user_signal(&self) -> zbus::fdo::Result<bool> {
+        self._inner.disconnect_user_new()
+    }
+
+    #[inline]
+    pub fn connect_user_removed_signal(
+        &self,
+        callback: CallbackU32Path,
+    ) -> zbus::fdo::Result<()> {
+        self._inner.connect_user_removed(callback)
+    }
+
+    #[inline]
+    pub fn disconnect_user_removed_signal(&self) -> zbus::fdo::Result<bool> {
+        self._inner.disconnect_user_removed()
     }
 }
 

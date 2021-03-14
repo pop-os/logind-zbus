@@ -5,6 +5,7 @@ use zbus::{Proxy, Result};
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
+use zvariant::OwnedObjectPath;
 
 use crate::{DEFAULT_DEST, generated::seat, types::{DbusPath}};
 
@@ -119,6 +120,12 @@ impl<'a> SeatInterface<'a> {
     pub  fn get_idle_since_hint_monotonic(&self) -> zbus::Result<Duration> {
         self._inner.idle_since_hint().map(|t| Duration::from_micros(t))
     }
+
+    // /// Property: sessions on this seat
+    // #[inline]
+    // pub fn get_sessions(&self) -> zbus::Result<Vec<DbusPath>> {
+    //     self._inner.sessions()
+    // }
 }
 
 #[cfg(test)]
@@ -151,5 +158,6 @@ mod tests {
         assert!(seat.get_idle_hint().is_ok());
         assert!(seat.get_idle_since_hint().is_ok());
         assert!(seat.get_idle_since_hint_monotonic().is_ok());
+        //assert!(seat.get_sessions().is_ok());
     }
 }

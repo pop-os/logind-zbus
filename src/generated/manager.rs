@@ -225,34 +225,34 @@ trait Manager {
     #[dbus_proxy(signal)]
     fn prepare_for_sleep(&self, start: bool) -> zbus::Result<()>;
 
-    // /// SeatNew signal
-    // #[dbus_proxy(signal)]
-    // fn seat_new(&self, seat_id: &str, object_path: &zvariant::ObjectPath) -> zbus::Result<()>;
+    /// SeatNew signal
+    #[dbus_proxy(signal)]
+    fn seat_new(&self, seat_id: &str, object_path: zvariant::OwnedObjectPath) -> zbus::Result<()>;
 
-    // /// SeatRemoved signal
-    // #[dbus_proxy(signal)]
-    // fn seat_removed(&self, seat_id: &str, object_path: &zvariant::ObjectPath) -> zbus::Result<()>;
+    /// SeatRemoved signal
+    #[dbus_proxy(signal)]
+    fn seat_removed(&self, seat_id: &str, object_path: zvariant::OwnedObjectPath) -> zbus::Result<()>;
 
-    // /// SessionNew signal
-    // #[dbus_proxy(signal)]
-    // fn session_new(&self, session_id: &str, object_path: &zvariant::ObjectPath)
-    //     -> zbus::Result<()>;
+    /// SessionNew signal
+    #[dbus_proxy(signal)]
+    fn session_new(&self, session_id: &str, object_path: zvariant::OwnedObjectPath)
+        -> zbus::Result<()>;
 
-    // /// SessionRemoved signal
-    // #[dbus_proxy(signal)]
-    // fn session_removed(
-    //     &self,
-    //     session_id: &str,
-    //     object_path: &zvariant::ObjectPath,
-    // ) -> zbus::Result<()>;
+    /// SessionRemoved signal
+    #[dbus_proxy(signal)]
+    fn session_removed(
+        &self,
+        session_id: &str,
+        object_path: zvariant::OwnedObjectPath,
+    ) -> zbus::Result<()>;
 
-    // /// UserNew signal
-    // #[dbus_proxy(signal)]
-    // fn user_new(&self, uid: u32, object_path: &zvariant::ObjectPath) -> zbus::Result<()>;
+    /// UserNew signal
+    #[dbus_proxy(signal)]
+    fn user_new(&self, uid: u32, object_path: zvariant::OwnedObjectPath) -> zbus::Result<()>;
 
-    // /// UserRemoved signal
-    // #[dbus_proxy(signal)]
-    // fn user_removed(&self, uid: u32, object_path: &zvariant::ObjectPath) -> zbus::Result<()>;
+    /// UserRemoved signal
+    #[dbus_proxy(signal)]
+    fn user_removed(&self, uid: u32, object_path: zvariant::OwnedObjectPath) -> zbus::Result<()>;
 
     /// BlockInhibited property
     #[dbus_proxy(property)]
