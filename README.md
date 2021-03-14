@@ -1,8 +1,22 @@
-## WIP
+# logind-zbus
 
-Please expect constant breakage in 0.1.x releases. Once the API
-settles done a bit then a proper semver release cadence will be
-adhered to starting with 0.2.x
+A wrapper around the dbus interfaces provided by `systemd-logind`.
 
-## Goals
-To apply a safe and ergonomic API to logind
+`logind-zbus` aims to provide a convenient API abstraction of the dbus interface
+of logind in rust, where possible parsing responses to concrete structs and enums.
+
+The crate is usable as is, but some of the interface properties are missing while
+the associated issues are solved.
+
+## Features
+
+A single feature flag is available: `azync`, which switches out `zbus::Connection`
+for `zbus::azync::Connection` allowing for async rust.
+
+---
+
+Q: `zbus-xmlgen` works fine, why not use the generated code directly?
+
+A: It still needs massaging to fix small issues, and to provide convenient
+helper types/structs/enums. The generated methods also don't show in IDE
+auto-completion due to reasons.
