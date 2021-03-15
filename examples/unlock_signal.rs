@@ -29,7 +29,7 @@ fn main() {
     }).unwrap();
 
     let mut signals = SignalReceiver::new(connection);
-    signals.receive_for(session.get_proxy());
+    signals.receive_for(session.get_proxy()).unwrap();
 
     loop {
         signals.next_signal().unwrap();

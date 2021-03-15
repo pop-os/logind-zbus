@@ -69,7 +69,7 @@ trait User {
 
     // /// Sessions property
     // #[dbus_proxy(property)]
-    // fn sessions(&self) -> zbus::Result<Vec<Path>>;
+    // fn sessions(&self) -> zbus::Result<Vec<DbusPath>>;
 
     /// Slice property
     #[dbus_proxy(property)]

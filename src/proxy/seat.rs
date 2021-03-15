@@ -37,7 +37,7 @@ impl<'a> SeatInterface<'a> {
         })
     }
 
-    /// Borrow the underlying `Proxy` for use with zbus directly
+    /// Borrow the underlying `SeatProxy` for use with zbus directly
     #[inline]
     pub fn get_proxy(&self) -> &seat::SeatProxy {
         &self._inner

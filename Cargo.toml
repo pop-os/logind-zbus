@@ -1,6 +1,6 @@
 [package]
 name = "logind-zbus"
-version = "0.3.0"
+version = "0.4.0"
 license = "MPL-2.0"
 authors = ["Luke D Jones <luke@ljones.dev>"]
 edition = "2018"
@@ -18,7 +18,7 @@ azync = []
 [dependencies]
 serde = "^1.0"
 serde_json = "^1.0"
-zbus = "^1.8"
-zbus_macros = "^1.8"
-zvariant = "^2.5"
-zvariant_derive = "^2.5"
+zbus = "^2.0.0-beta.3"
+zbus_macros = "^2.0.0-beta.3"
+zvariant = "^2.6"
+zvariant_derive = "^2.6"

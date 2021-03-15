@@ -4,7 +4,7 @@ use std::time::Duration;
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
-use zbus::Result;
+use zbus::{Result, SignalHandlerId};
 use zvariant::OwnedObjectPath;
 
 use crate::{
@@ -26,7 +26,7 @@ use crate::{
 /// ```
 ///
 /// # Notes
-/// All `connect_*`/`disconnect_*` functions are signals and each of these functions
+/// All `connect_*` functions are signals and each of these functions
 /// names reflect the underlying generated Proxy call. If desired the wrapped function
 /// can be bypassed with:
 /// ```
@@ -44,7 +44,7 @@ impl<'a> ManagerInterface<'a> {
         })
     }
 
-    /// Borrow the underlying `Proxy` for use with zbus directly
+    /// Borrow the underlying `ManagerProxy` for use with zbus directly
     pub fn get_proxy(&self) -> &manager::ManagerProxy {
         &self._inner
     }
@@ -564,7 +564,7 @@ impl<'a> ManagerInterface<'a> {
     ///////////////////////////////////////////////////////////////////////////
 
     #[inline]
-    pub fn connect_prepare_for_shutdown<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    pub fn connect_prepare_for_shutdown<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
     where
         C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -572,12 +572,7 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn disconnect_prepare_for_shutdown(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_prepare_for_shutdown()
-    }
-
-    #[inline]
-    pub fn connect_prepare_for_sleep<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    pub fn connect_prepare_for_sleep<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
     where
         C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -585,12 +580,7 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn disconnect_prepare_for_sleep(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_prepare_for_sleep()
-    }
-
-    #[inline]
-    pub fn connect_new_seat<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    pub fn connect_new_seat<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -598,12 +588,7 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn disconnect_new_seat(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_seat_new()
-    }
-
-    #[inline]
-    pub fn connect_seat_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    pub fn connect_seat_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -611,12 +596,7 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn disconnect_seat_removed(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_seat_removed()
-    }
-
-    #[inline]
-    pub fn connect_new_session<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    pub fn connect_new_session<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -624,12 +604,7 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn disconnect_new_session(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_session_new()
-    }
-
-    #[inline]
-    pub fn connect_session_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    pub fn connect_session_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -637,12 +612,7 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn disconnect_session_removed(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_session_removed()
-    }
-
-    #[inline]
-    pub fn connect_new_user<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    pub fn connect_new_user<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
     where
         C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -650,21 +620,11 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn disconnect_new_user(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_user_new()
-    }
-
-    #[inline]
-    pub fn connect_user_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    pub fn connect_user_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
     where
         C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
         self._inner.connect_user_removed(callback)
-    }
-
-    #[inline]
-    pub fn disconnect_user_removed(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_user_removed()
     }
 }
 

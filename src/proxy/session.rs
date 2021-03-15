@@ -4,7 +4,7 @@ use std::time::Duration;
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
-use zbus::Result;
+use zbus::{Result, SignalHandlerId};
 
 use crate::{
     generated::session,
@@ -37,7 +37,7 @@ use crate::{
 /// ```
 ///
 /// # Notes
-/// All `connect_*`/`disconnect_*` functions are signals and each of these functions
+/// All `connect_*` functions are signals and each of these functions
 /// names reflect the underlying generated Proxy call. If desired the wrapped function
 /// can be bypassed with:
 /// ```
@@ -54,7 +54,7 @@ impl<'a> SessionInterface<'a> {
         })
     }
 
-    /// Borrow the underlying `Proxy` for use with zbus directly
+    /// Borrow the underlying `SessionProxy` for use with zbus directly
     pub fn get_proxy(&self) -> &session::SessionProxy {
         &self._inner
     }
@@ -325,56 +325,36 @@ impl<'a> SessionInterface<'a> {
     pub fn connect_lock<C>(
         &self,
         callback: C,
-    ) -> zbus::fdo::Result<()>
+    ) -> zbus::fdo::Result<SignalHandlerId>
         where C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static{
         self._inner.connect_lock(callback)
-    }
-
-    #[inline]
-    pub fn disconnect_lock(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_lock()
     }
 
     #[inline]
     pub fn connect_pause_device<C>(
         &self,
         callback: C,
-    ) -> zbus::fdo::Result<()>
+    ) -> zbus::fdo::Result<SignalHandlerId>
     where C: FnMut(u32, u32, &str) -> std::result::Result<(), zbus::Error> + Send + 'static {
         self._inner.connect_pause_device(callback)
-    }
-
-    #[inline]
-    pub fn disconnect_pause_device(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_pause_device()
     }
 
     #[inline]
     pub fn connect_resume_device<C>(
         &self,
         callback: C,
-    ) -> zbus::fdo::Result<()>
+    ) -> zbus::fdo::Result<SignalHandlerId>
     where C: FnMut(u32, u32, i32) -> std::result::Result<(), zbus::Error> + Send + 'static {
         self._inner.connect_resume_device(callback)
-    }
-
-    #[inline]
-    pub fn disconnect_resume_device(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_resume_device()
     }
 
     #[inline]
     pub fn connect_unlock<C>(
         &self,
         callback: C,
-    ) -> zbus::fdo::Result<()>
+    ) -> zbus::fdo::Result<SignalHandlerId>
     where C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static{
         self._inner.connect_unlock(callback)
-    }
-
-    #[inline]
-    pub fn disconnect_unlock(&self) -> zbus::fdo::Result<bool> {
-        self._inner.disconnect_unlock()
     }
 }
 

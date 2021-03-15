@@ -40,7 +40,7 @@ impl<'a> UserInterface<'a> {
         })
     }
 
-    /// Borrow the underlying `Proxy` for use with zbus directly
+    /// Borrow the underlying `UserProxy` for use with zbus directly
     pub fn get_proxy(&self) -> &user::UserProxy {
         &self._inner
     }
