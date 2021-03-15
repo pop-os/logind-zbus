@@ -24,14 +24,14 @@ use crate::{
 ///
 /// # Example
 /// ```rust
-/// use logind_zbus::ManagerInterface;
-/// use logind_zbus::SessionInterface;
+/// use logind_zbus::ManagerProxy;
+/// use logind_zbus::SessionProxy;
 /// use zbus::Connection;
 ///
 /// let connection = Connection::new_system().unwrap();
-/// let manager = ManagerInterface::new(&connection).unwrap();
+/// let manager = ManagerProxy::new(&connection).unwrap();
 /// let sessions = manager.list_sessions().unwrap();
-/// let session = SessionInterface::new(&connection, &sessions[0]).unwrap();
+/// let session = SessionProxy::new(&connection, &sessions[0]).unwrap();
 ///
 /// let time1 = session.get_timestamp().unwrap();
 /// assert!(time1.as_secs() > 0);
@@ -44,8 +44,8 @@ use crate::{
 /// All `connect_*` functions are signals and each of these functions
 /// names reflect the underlying generated Proxy call. If desired the wrapped function
 /// can be bypassed with:
-/// ```
-/// <SessionInterface>.get_proxy().connect_<function name>()
+/// ```ignore
+/// *<SessionProxy>.connect_<function name>()
 /// ```
 pub struct SessionProxy<'a>(session::SessionProxy<'a>);
 

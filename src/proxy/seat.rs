@@ -16,14 +16,14 @@ use crate::{DEFAULT_DEST, generated::seat, types::{DbusPath}};
 ///
 /// # Example
 /// ```rust
-/// use logind_zbus::ManagerInterface;
-/// use logind_zbus::SeatInterface;
+/// use logind_zbus::ManagerProxy;
+/// use logind_zbus::SeatProxy;
 /// use zbus::Connection;
 ///
 /// let connection = Connection::new_system().unwrap();
-/// let manager = ManagerInterface::new(&connection).unwrap();
+/// let manager = ManagerProxy::new(&connection).unwrap();
 /// let seats = manager.list_seats().unwrap();
-/// let seat = SeatInterface::new(&connection, &seats[0]).unwrap();
+/// let seat = SeatProxy::new(&connection, &seats[0]).unwrap();
 /// 
 /// assert!(seat.get_active_session().is_ok());
 /// 

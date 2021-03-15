@@ -17,14 +17,14 @@ use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, UserInfo, UserState
 ///
 /// # Example
 /// ```rust
-/// use logind_zbus::ManagerInterface;
-/// use logind_zbus::UserInterface;
+/// use logind_zbus::ManagerProxy;
+/// use logind_zbus::UserProxy;
 /// use zbus::Connection;
 ///
 /// let connection = Connection::new_system().unwrap();
-/// let manager = ManagerInterface::new(&connection).unwrap();
+/// let manager = ManagerProxy::new(&connection).unwrap();
 /// let users = manager.list_users().unwrap();
-/// let user = UserInterface::new(&connection, &users[0]).unwrap();
+/// let user = UserProxy::new(&connection, &users[0]).unwrap();
 /// 
 /// let time1 = user.get_timestamp().unwrap();
 /// assert!(time1.as_secs() > 0);

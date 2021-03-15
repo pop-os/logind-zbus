@@ -20,11 +20,11 @@ use crate::{
 ///
 /// # Example
 /// ```rust
-/// use logind_zbus::ManagerInterface;
+/// use logind_zbus::ManagerProxy;
 /// use zbus::Connection;
 ///
 /// let connection = Connection::new_system().unwrap();
-/// let manager = ManagerInterface::new(&connection).unwrap();
+/// let manager = ManagerProxy::new(&connection).unwrap();
 ///
 /// assert!(manager.can_suspend().is_ok());
 /// ```
@@ -33,8 +33,8 @@ use crate::{
 /// All `connect_*` functions are signals and each of these functions
 /// names reflect the underlying generated Proxy call. If desired the wrapped function
 /// can be bypassed with:
-/// ```
-/// <ManagerInterface>.get_proxy().connect_<function name>()
+/// ```ignore
+/// *<ManagerProxy>.connect_<function name>()
 /// ```
 pub struct ManagerProxy<'a>(manager::ManagerProxy<'a>);
 
