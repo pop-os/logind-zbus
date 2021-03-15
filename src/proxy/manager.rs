@@ -1,17 +1,16 @@
 use std::time::Duration;
 
-use zbus::{Proxy, Result};
 #[cfg(feature = "azync")]
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
+use zbus::Result;
 use zvariant::OwnedObjectPath;
 
-use crate::{generated::manager, types::{DbusPath, IsSupported, ScheduledShutdown, SessionInfo, ShutdownType, UserInfo}};
-
-pub(crate) type CallbackBool = fn(bool) -> std::result::Result<(), zbus::Error>;
-pub(crate) type CallbackStrPath = fn(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error>;
-pub(crate) type CallbackU32Path = fn(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error>;
+use crate::{
+    generated::manager,
+    types::{DbusPath, IsSupported, ScheduledShutdown, SessionInfo, ShutdownType, UserInfo},
+};
 
 /// Proxy wrapper for the logind `Manager` dbus interface
 ///
@@ -22,8 +21,16 @@ pub(crate) type CallbackU32Path = fn(u32, OwnedObjectPath) -> std::result::Resul
 ///
 /// let connection = Connection::new_system().unwrap();
 /// let manager = ManagerInterface::new(&connection).unwrap();
-/// 
+///
 /// assert!(manager.can_suspend().is_ok());
+/// ```
+///
+/// # Notes
+/// All `connect_*`/`disconnect_*` functions are signals and each of these functions
+/// names reflect the underlying generated Proxy call. If desired the wrapped function
+/// can be bypassed with:
+/// ```
+/// <ManagerInterface>.get_proxy().connect_<function name>()
 /// ```
 pub struct ManagerInterface<'a> {
     _inner: manager::ManagerProxy<'a>,
@@ -38,7 +45,7 @@ impl<'a> ManagerInterface<'a> {
     }
 
     /// Borrow the underlying `Proxy` for use with zbus directly
-    pub fn get_proxy(&self) -> &Proxy {
+    pub fn get_proxy(&self) -> &manager::ManagerProxy {
         &self._inner
     }
 
@@ -157,7 +164,6 @@ impl<'a> ManagerInterface<'a> {
         self._inner.get_seat(seat_id)
     }
 
-
     #[inline]
     pub fn get_session(&self, session_id: &str) -> zbus::Result<zvariant::OwnedObjectPath> {
         self._inner.get_session(session_id)
@@ -205,7 +211,12 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn kill_session(&self, session_id: &str, who: &str, signal_number: i32) -> zbus::Result<()>{
+    pub fn kill_session(
+        &self,
+        session_id: &str,
+        who: &str,
+        signal_number: i32,
+    ) -> zbus::Result<()> {
         self._inner.kill_session(session_id, who, signal_number)
     }
 
@@ -260,8 +271,13 @@ impl<'a> ManagerInterface<'a> {
     }
 
     #[inline]
-    pub fn schedule_shutdown(&self, shutdown_type: ShutdownType, micros: Duration) -> zbus::Result<()> {
-        self._inner.schedule_shutdown(shutdown_type.into(), micros.as_micros() as u64)
+    pub fn schedule_shutdown(
+        &self,
+        shutdown_type: ShutdownType,
+        micros: Duration,
+    ) -> zbus::Result<()> {
+        self._inner
+            .schedule_shutdown(shutdown_type.into(), micros.as_micros() as u64)
     }
 
     #[inline]
@@ -271,12 +287,14 @@ impl<'a> ManagerInterface<'a> {
 
     #[inline]
     pub fn set_reboot_to_boot_loader_entry(&self, boot_loader_entry: &str) -> zbus::Result<()> {
-        self._inner.set_reboot_to_boot_loader_entry(boot_loader_entry)
+        self._inner
+            .set_reboot_to_boot_loader_entry(boot_loader_entry)
     }
 
     #[inline]
     pub fn set_reboot_to_boot_loader_menu(&self, timeout: Duration) -> zbus::Result<()> {
-        self._inner.set_reboot_to_boot_loader_menu(timeout.as_secs())
+        self._inner
+            .set_reboot_to_boot_loader_menu(timeout.as_secs())
     }
 
     #[inline]
@@ -388,7 +406,9 @@ impl<'a> ManagerInterface<'a> {
 
     #[inline]
     pub fn get_holdoff_timeout_usec(&self) -> zbus::Result<Duration> {
-        self._inner.holdoff_timeout_usec().map(|usec| Duration::from_micros(usec))
+        self._inner
+            .holdoff_timeout_usec()
+            .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
@@ -398,7 +418,9 @@ impl<'a> ManagerInterface<'a> {
 
     #[inline]
     pub fn get_idle_action_usec(&self) -> zbus::Result<Duration> {
-        self._inner.idle_action_usec().map(|usec| Duration::from_micros(usec))
+        self._inner
+            .idle_action_usec()
+            .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
@@ -408,17 +430,23 @@ impl<'a> ManagerInterface<'a> {
 
     #[inline]
     pub fn get_idle_since_hint(&self) -> zbus::Result<Duration> {
-        self._inner.idle_since_hint().map(|usec| Duration::from_micros(usec))
+        self._inner
+            .idle_since_hint()
+            .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
     pub fn get_idle_since_hint_monotonic(&self) -> zbus::Result<Duration> {
-        self._inner.idle_since_hint_monotonic().map(|usec| Duration::from_micros(usec))
+        self._inner
+            .idle_since_hint_monotonic()
+            .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
     pub fn get_inhibit_delay_max_usec(&self) -> zbus::Result<Duration> {
-        self._inner.inhibit_delay_max_usec().map(|usec| Duration::from_micros(usec))
+        self._inner
+            .inhibit_delay_max_usec()
+            .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
@@ -523,7 +551,9 @@ impl<'a> ManagerInterface<'a> {
 
     #[inline]
     pub fn get_user_stop_delay_usec(&self) -> zbus::Result<Duration> {
-        self._inner.user_stop_delay_usec().map(|usec| Duration::from_micros(usec))
+        self._inner
+            .user_stop_delay_usec()
+            .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
@@ -534,106 +564,106 @@ impl<'a> ManagerInterface<'a> {
     ///////////////////////////////////////////////////////////////////////////
 
     #[inline]
-    pub fn connect_prepare_for_shutdown_signal(
-        &self,
-        callback: CallbackBool,
-    ) -> zbus::fdo::Result<()> {
+    pub fn connect_prepare_for_shutdown<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    where
+        C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self._inner.connect_prepare_for_shutdown(callback)
     }
 
     #[inline]
-    pub fn disconnect_prepare_for_shutdown_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_prepare_for_shutdown(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_prepare_for_shutdown()
     }
 
     #[inline]
-    pub fn connect_prepare_for_sleep_signal(
-        &self,
-        callback: CallbackBool,
-    ) -> zbus::fdo::Result<()> {
+    pub fn connect_prepare_for_sleep<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    where
+        C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self._inner.connect_prepare_for_sleep(callback)
     }
 
     #[inline]
-    pub fn disconnect_prepare_for_sleep_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_prepare_for_sleep(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_prepare_for_sleep()
     }
 
     #[inline]
-    pub fn connect_new_seat_signal(
-        &self,
-        callback: CallbackStrPath,
-    ) -> zbus::fdo::Result<()> {
+    pub fn connect_new_seat<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    where
+        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self._inner.connect_seat_new(callback)
     }
 
     #[inline]
-    pub fn disconnect_new_seat_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_new_seat(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_seat_new()
     }
 
     #[inline]
-    pub fn connect_seat_removed_signal(
-        &self,
-        callback: CallbackStrPath,
-    ) -> zbus::fdo::Result<()> {
+    pub fn connect_seat_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    where
+        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self._inner.connect_seat_removed(callback)
     }
 
     #[inline]
-    pub fn disconnect_seat_removed_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_seat_removed(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_seat_removed()
     }
 
     #[inline]
-    pub fn connect_new_session_signal(
-        &self,
-        callback: CallbackStrPath,
-    ) -> zbus::fdo::Result<()> {
+    pub fn connect_new_session<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    where
+        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self._inner.connect_session_new(callback)
     }
 
     #[inline]
-    pub fn disconnect_new_session_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_new_session(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_session_new()
     }
 
     #[inline]
-    pub fn connect_session_removed_signal(
-        &self,
-        callback: CallbackStrPath,
-    ) -> zbus::fdo::Result<()> {
+    pub fn connect_session_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    where
+        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self._inner.connect_session_removed(callback)
     }
 
     #[inline]
-    pub fn disconnect_session_removed_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_session_removed(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_session_removed()
     }
 
     #[inline]
-    pub fn connect_new_user_signal(
-        &self,
-        callback: CallbackU32Path,
-    ) -> zbus::fdo::Result<()> {
+    pub fn connect_new_user<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    where
+        C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self._inner.connect_user_new(callback)
     }
 
     #[inline]
-    pub fn disconnect_new_user_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_new_user(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_user_new()
     }
 
     #[inline]
-    pub fn connect_user_removed_signal(
-        &self,
-        callback: CallbackU32Path,
-    ) -> zbus::fdo::Result<()> {
+    pub fn connect_user_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
+    where
+        C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self._inner.connect_user_removed(callback)
     }
 
     #[inline]
-    pub fn disconnect_user_removed_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_user_removed(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_user_removed()
     }
 }

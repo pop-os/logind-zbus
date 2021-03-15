@@ -1,11 +1,10 @@
 use std::time::Duration;
 
-use zbus::{Proxy, Result};
+use zbus::Result;
 #[cfg(feature = "azync")]
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
-use zvariant::OwnedObjectPath;
 
 use crate::{DEFAULT_DEST, generated::seat, types::{DbusPath}};
 
@@ -40,7 +39,7 @@ impl<'a> SeatInterface<'a> {
 
     /// Borrow the underlying `Proxy` for use with zbus directly
     #[inline]
-    pub fn get_proxy(&self) -> &Proxy {
+    pub fn get_proxy(&self) -> &seat::SeatProxy {
         &self._inner
     }
 

@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use zbus::{Proxy, Result};
 #[cfg(feature = "azync")]
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
+use zbus::Result;
 
 use crate::{
     generated::session,
@@ -13,8 +13,6 @@ use crate::{
     },
     DEFAULT_DEST,
 };
-
-pub(crate) type Callback0 = fn() -> std::result::Result<(), zbus::Error>;
 
 /// Proxy wrapper for the logind `Session` dbus interface
 ///
@@ -30,12 +28,20 @@ pub(crate) type Callback0 = fn() -> std::result::Result<(), zbus::Error>;
 /// let manager = ManagerInterface::new(&connection).unwrap();
 /// let sessions = manager.list_sessions().unwrap();
 /// let session = SessionInterface::new(&connection, &sessions[0]).unwrap();
-/// 
+///
 /// let time1 = session.get_timestamp().unwrap();
 /// assert!(time1.as_secs() > 0);
-/// 
+///
 /// let time2 = session.get_timestamp_monotonic().unwrap();
 /// assert!(time2.as_secs() > 0);
+/// ```
+///
+/// # Notes
+/// All `connect_*`/`disconnect_*` functions are signals and each of these functions
+/// names reflect the underlying generated Proxy call. If desired the wrapped function
+/// can be bypassed with:
+/// ```
+/// <SessionInterface>.get_proxy().connect_<function name>()
 /// ```
 pub struct SessionInterface<'a> {
     _inner: session::SessionProxy<'a>,
@@ -49,7 +55,7 @@ impl<'a> SessionInterface<'a> {
     }
 
     /// Borrow the underlying `Proxy` for use with zbus directly
-    pub fn get_proxy(&self) -> &Proxy {
+    pub fn get_proxy(&self) -> &session::SessionProxy {
         &self._inner
     }
 
@@ -316,57 +322,67 @@ impl<'a> SessionInterface<'a> {
     }
 
     #[inline]
-    pub fn connect_lock_signal(&self, callback: Callback0) -> zbus::fdo::Result<()> {
+    pub fn connect_lock<C>(
+        &self,
+        callback: C,
+    ) -> zbus::fdo::Result<()>
+        where C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static{
         self._inner.connect_lock(callback)
     }
 
     #[inline]
-    pub fn disconnect_lock_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_lock(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_lock()
     }
 
     #[inline]
-    pub fn connect_pause_device_signal(
+    pub fn connect_pause_device<C>(
         &self,
-        callback: for<'r> fn(u32, u32, &'r str) -> std::result::Result<(), zbus::Error>,
-    ) -> zbus::fdo::Result<()> {
+        callback: C,
+    ) -> zbus::fdo::Result<()>
+    where C: FnMut(u32, u32, &str) -> std::result::Result<(), zbus::Error> + Send + 'static {
         self._inner.connect_pause_device(callback)
     }
 
     #[inline]
-    pub fn disconnect_pause_device_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_pause_device(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_pause_device()
     }
 
     #[inline]
-    pub fn connect_resume_device_signal(
+    pub fn connect_resume_device<C>(
         &self,
-        callback: fn(u32, u32, i32) -> std::result::Result<(), zbus::Error>,
-    ) -> zbus::fdo::Result<()> {
+        callback: C,
+    ) -> zbus::fdo::Result<()>
+    where C: FnMut(u32, u32, i32) -> std::result::Result<(), zbus::Error> + Send + 'static {
         self._inner.connect_resume_device(callback)
     }
 
     #[inline]
-    pub fn disconnect_resume_device_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_resume_device(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_resume_device()
     }
 
     #[inline]
-    pub fn connect_unlock_signal(&self, callback: Callback0) -> zbus::fdo::Result<()> {
+    pub fn connect_unlock<C>(
+        &self,
+        callback: C,
+    ) -> zbus::fdo::Result<()>
+    where C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static{
         self._inner.connect_unlock(callback)
     }
 
     #[inline]
-    pub fn disconnect_unlock_signal(&self) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_unlock(&self) -> zbus::fdo::Result<bool> {
         self._inner.disconnect_unlock()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use core::panic;
     use crate::ManagerInterface;
     use crate::SessionInterface;
+    use core::panic;
     use zbus::{Connection, SignalReceiver};
 
     #[test]
@@ -415,12 +431,12 @@ mod tests {
         let sessions = manager.list_sessions().unwrap();
         let session = SessionInterface::new(&connection, &sessions[0]).unwrap();
 
-        session.connect_lock_signal(|| Ok(())).unwrap();
+        session.connect_lock(|| Ok(())).unwrap();
 
         let mut sig_recv = SignalReceiver::new(connection);
         sig_recv.receive_for(session.get_proxy());
-        //sig_recv.next_signal().unwrap();
-    }    
+        //sig_recv.next().unwrap();
+    }
 
     #[test]
     fn properties() {

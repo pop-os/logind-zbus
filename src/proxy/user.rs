@@ -1,11 +1,10 @@
 use std::time::Duration;
 
-use zbus::{Proxy, Result};
+use zbus::Result;
 #[cfg(feature = "azync")]
 use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
-use zvariant::OwnedObjectPath;
 
 use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, UserInfo, UserState}};
 /// Proxy wrapper for the logind `User` dbus interface
@@ -42,7 +41,7 @@ impl<'a> UserInterface<'a> {
     }
 
     /// Borrow the underlying `Proxy` for use with zbus directly
-    pub fn get_proxy(&self) -> &Proxy {
+    pub fn get_proxy(&self) -> &user::UserProxy {
         &self._inner
     }
 
