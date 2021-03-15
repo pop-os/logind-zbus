@@ -29,49 +29,62 @@ use crate::types::DbusPath;
 )]
 trait Seat {
     /// ActivateSession method
+    #[inline]
     fn activate_session(&self, session_id: &str) -> zbus::Result<()>;
 
     /// SwitchTo method
+    #[inline]
     fn switch_to(&self, vtnr: u32) -> zbus::Result<()>;
 
     /// SwitchToNext method
+    #[inline]
     fn switch_to_next(&self) -> zbus::Result<()>;
 
     /// SwitchToPrevious method
+    #[inline]
     fn switch_to_previous(&self) -> zbus::Result<()>;
 
     /// Terminate method
+    #[inline]
     fn terminate(&self) -> zbus::Result<()>;
 
     /// ActiveSession property
     #[dbus_proxy(property)]
+    #[inline]
     fn active_session(&self) -> zbus::Result<DbusPath>;
 
     /// CanGraphical property
     #[dbus_proxy(property)]
+    #[inline]
     fn can_graphical(&self) -> zbus::Result<bool>;
 
     /// CanTTY property
     #[dbus_proxy(property)]
+    #[inline]
     fn can_tty(&self) -> zbus::Result<bool>;
 
     /// Id property
     #[dbus_proxy(property)]
+    #[inline]
     fn id(&self) -> zbus::Result<String>;
 
     /// IdleHint property
     #[dbus_proxy(property)]
+    #[inline]
     fn idle_hint(&self) -> zbus::Result<bool>;
 
     /// IdleSinceHint property
     #[dbus_proxy(property)]
+    #[inline]
     fn idle_since_hint(&self) -> zbus::Result<u64>;
 
     /// IdleSinceHintMonotonic property
     #[dbus_proxy(property)]
+    #[inline]
     fn idle_since_hint_monotonic(&self) -> zbus::Result<u64>;
 
     // /// Sessions property
     // #[dbus_proxy(property)]
-    // fn sessions(&self) -> zbus::Result<Vec<Path>>;
+    // #[inline]
+    // fn sessions(&self) -> zbus::Result<Vec<DbusPath>>;
 }

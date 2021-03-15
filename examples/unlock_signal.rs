@@ -1,6 +1,6 @@
 use std::{sync::{Arc, Mutex}, thread::sleep, time::Duration};
 
-use logind_zbus::{ManagerInterface, SessionInterface};
+use logind_zbus::{ManagerProxy, SessionProxy};
 use zbus::{Connection, SignalReceiver};
 
 fn print_unlocked() -> std::result::Result<(), zbus::Error> {
@@ -10,10 +10,10 @@ fn print_unlocked() -> std::result::Result<(), zbus::Error> {
 
 fn main() {
     let connection = Connection::new_system().unwrap();
-    let manager = ManagerInterface::new(&connection).unwrap();
+    let manager = ManagerProxy::new(&connection).unwrap();
     let sessions = manager.list_sessions().unwrap();
     dbg!(&sessions);
-    let session = SessionInterface::new(&connection, &sessions[0]).unwrap();
+    let session = SessionProxy::new(&connection, &sessions[0]).unwrap();
 
     let end = Arc::new(Mutex::new(false));
     let end2= end.clone();

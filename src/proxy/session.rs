@@ -5,6 +5,10 @@ use zbus::azync::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Connection;
 use zbus::{Result, SignalHandlerId};
+#[cfg(feature = "azync")]
+use zbus::azync::Proxy;
+#[cfg(not(feature = "azync"))]
+use zbus::Proxy;
 
 use crate::{
     generated::session,
@@ -43,45 +47,75 @@ use crate::{
 /// ```
 /// <SessionInterface>.get_proxy().connect_<function name>()
 /// ```
-pub struct SessionInterface<'a> {
-    _inner: session::SessionProxy<'a>,
+pub struct SessionProxy<'a>(session::SessionProxy<'a>);
+
+impl<'a> std::ops::Deref for SessionProxy<'a> {
+    type Target = Proxy<'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-impl<'a> SessionInterface<'a> {
+impl<'a> std::ops::DerefMut for SessionProxy<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<'a> std::convert::AsRef<Proxy<'a>> for SessionProxy<'a> {
+    fn as_ref(&self) -> &Proxy<'a> {
+        &*self
+    }
+}
+
+impl<'a> std::convert::AsMut<Proxy<'a>> for SessionProxy<'a> {
+    fn as_mut(&mut self) -> &mut Proxy<'a> {
+        &mut *self
+    }
+}
+
+impl<'a> SessionProxy<'a> {
     pub fn new(connection: &Connection, session: &'a SessionInfo) -> Result<Self> {
-        Ok(Self {
-            _inner: session::SessionProxy::new_for(&connection, DEFAULT_DEST, session.path())?,
-        })
+        Ok(Self(session::SessionProxy::new_for(&connection, DEFAULT_DEST, session.path())?))
     }
 
     /// Borrow the underlying `SessionProxy` for use with zbus directly
     pub fn get_proxy(&self) -> &session::SessionProxy {
-        &self._inner
+        &self.0
+    }
+
+    /// Deregister the signal handler with the ID handler_id.
+    ///
+    /// This method returns Ok(true) if a handler with the id handler_id is found
+    /// and removed; Ok(false) otherwise. 
+    pub fn disconnect_signal(&self, handler_id: SignalHandlerId) -> zbus::fdo::Result<bool> {
+        self.0.disconnect_signal(handler_id)
     }
 
     /// Bring session to foreground
     #[inline]
     pub fn activate(&self) -> zbus::Result<()> {
-        self._inner.activate()
+        self.0.activate()
     }
 
     /// Send a signal to all processes of the user
     #[inline]
     pub fn kill(&self, who: UserInfo, signal: i32) -> zbus::Result<()> {
-        self._inner.kill(&who.uid().to_string(), signal)
+        self.0.kill(&who.uid().to_string(), signal)
     }
 
     /// Ask session to activate its screen lock
     #[inline]
     pub fn lock(&self) -> zbus::Result<()> {
-        self._inner.lock()
+        self.0.lock()
     }
 
     /// Allows a session controller to synchronously pause a device after
     /// receiving a PauseDevice("pause") signal
     #[inline]
     pub fn pause_device_complete(&self, major: u32, minor: u32) -> zbus::Result<()> {
-        self._inner.pause_device_complete(major, minor)
+        self.0.pause_device_complete(major, minor)
     }
 
     /// Drops control of a given session. Closing the D-Bus connection implicitly
@@ -89,14 +123,14 @@ impl<'a> SessionInterface<'a> {
     /// the controller requested
     #[inline]
     pub fn release_control(&self) -> zbus::Result<()> {
-        self._inner.release_control()
+        self.0.release_control()
     }
 
     /// Release a device (after TakeDevice). This is also implicitly done by
     /// `release_control()` or when closing the D-Bus connection.
     #[inline]
     pub fn release_device(&self, major: u32, minor: u32) -> zbus::Result<()> {
-        self._inner.release_device(major, minor)
+        self.0.release_device(major, minor)
     }
 
     /// Used to set the display brightness. This is intended to be used
@@ -104,19 +138,19 @@ impl<'a> SessionInterface<'a> {
     /// hardware settings in a controlled way.
     #[inline]
     pub fn set_brightness(&self, subsystem: &str, name: &str, brightness: u32) -> zbus::Result<()> {
-        self._inner.set_brightness(subsystem, name, brightness)
+        self.0.set_brightness(subsystem, name, brightness)
     }
 
     /// SetIdleHint() is called by the session object to update the idle state
     /// of the session whenever it changes
     #[inline]
     pub fn set_idle_hint(&self, idle: bool) -> zbus::Result<()> {
-        self._inner.set_idle_hint(idle)
+        self.0.set_idle_hint(idle)
     }
 
     #[inline]
     pub fn set_locked_hint(&self, locked: bool) -> zbus::Result<()> {
-        self._inner.set_locked_hint(locked)
+        self.0.set_locked_hint(locked)
     }
 
     /// Allows the type of the session to be changed dynamically. It can only be
@@ -126,13 +160,13 @@ impl<'a> SessionInterface<'a> {
     /// `release_control()` or closing the D-Bus connection.
     #[inline]
     pub fn set_type(&self, type_: &str) -> zbus::Result<()> {
-        self._inner.set_type(type_)
+        self.0.set_type(type_)
     }
 
     /// Allows a process to take exclusive managed device access-control for that session
     #[inline]
     pub fn take_control(&self, force: bool) -> zbus::Result<()> {
-        self._inner.take_control(force)
+        self.0.take_control(force)
     }
 
     /// Get a file descriptor for a specific device. Pass in the major and minor
@@ -140,101 +174,101 @@ impl<'a> SessionInterface<'a> {
     /// descriptor for the device.
     #[inline]
     pub fn take_device(&self, major: u32, minor: u32) -> zbus::Result<Device> {
-        self._inner.take_device(major, minor)
+        self.0.take_device(major, minor)
     }
 
     /// Forcibly terminate this session
     #[inline]
     pub fn terminate(&self) -> zbus::Result<()> {
-        self._inner.terminate()
+        self.0.terminate()
     }
 
     /// Ask this session to deactivate its lock screen
     #[inline]
     pub fn unlock(&self) -> zbus::Result<()> {
-        self._inner.unlock()
+        self.0.unlock()
     }
 
     /// Property: Is session is active, i.e. currently in the foreground.
     /// This field is semi-redundant due to State (`get_state()`).
     #[inline]
     pub fn get_active(&self) -> zbus::Result<bool> {
-        self._inner.active()
+        self.0.active()
     }
 
     /// Property: the Kernel Audit session ID of the session if auditing is available.
     #[inline]
     pub fn get_audit(&self) -> zbus::Result<u32> {
-        self._inner.audit()
+        self.0.audit()
     }
 
     /// Property: The class of Session
     #[inline]
     pub fn get_class(&self) -> zbus::Result<SessionClass> {
-        self._inner.class().map(|v| v.as_str().into())
+        self.0.class().map(|v| v.as_str().into())
     }
 
     /// Property: Describes the desktop environment running in the session (if known)
     #[inline]
     pub fn get_desktop(&self) -> zbus::Result<String> {
-        self._inner.desktop()
+        self.0.desktop()
     }
 
     /// The X11 display name if this is a graphical login. If not, this is an empty string.
     #[inline]
     pub fn get_display(&self) -> zbus::Result<String> {
-        self._inner.display()
+        self.0.display()
     }
 
     /// Property: Session ID
     #[inline]
     pub fn get_id(&self) -> zbus::Result<String> {
-        self._inner.id()
+        self.0.id()
     }
 
     #[inline]
     pub fn get_is_idle_hint(&self) -> zbus::Result<bool> {
-        self._inner.idle_hint()
+        self.0.idle_hint()
     }
 
     #[inline]
     pub fn get_is_idle_since_hint(&self) -> zbus::Result<u64> {
-        self._inner.idle_since_hint()
+        self.0.idle_since_hint()
     }
 
     #[inline]
     pub fn get_is_idle_since_hint_monotonic(&self) -> zbus::Result<u64> {
-        self._inner.idle_since_hint_monotonic()
+        self.0.idle_since_hint_monotonic()
     }
 
     /// Property: PID of the process that registered the session
     #[inline]
     pub fn get_leader(&self) -> zbus::Result<u32> {
-        self._inner.leader()
+        self.0.leader()
     }
 
     /// Property: shows the locked hint state of this session
     #[inline]
     pub fn get_locked_hint(&self) -> zbus::Result<bool> {
-        self._inner.locked_hint()
+        self.0.locked_hint()
     }
 
     /// Property: The `User` name
     #[inline]
     pub fn get_name(&self) -> zbus::Result<String> {
-        self._inner.name()
+        self.0.name()
     }
 
     /// Property: local or remote
     #[inline]
     pub fn get_is_remote(&self) -> zbus::Result<bool> {
-        self._inner.remote()
+        self.0.remote()
     }
 
     /// Property: None if not remote
     #[inline]
     pub fn get_remote_host(&self) -> zbus::Result<Option<String>> {
-        self._inner.remote_host().map(|s| {
+        self.0.remote_host().map(|s| {
             if s.is_empty() {
                 return Some(s);
             }
@@ -245,7 +279,7 @@ impl<'a> SessionInterface<'a> {
     /// Property: None if not remote
     #[inline]
     pub fn get_remote_user(&self) -> zbus::Result<Option<String>> {
-        self._inner.remote_user().map(|s| {
+        self.0.remote_user().map(|s| {
             if s.is_empty() {
                 return Some(s);
             }
@@ -256,32 +290,32 @@ impl<'a> SessionInterface<'a> {
     /// Property: systemd scope unit name of this session
     #[inline]
     pub fn get_scope(&self) -> zbus::Result<String> {
-        self._inner.scope()
+        self.0.scope()
     }
 
     /// Property: seat this session belongs to if there is any
     #[inline]
     pub fn get_seat(&self) -> zbus::Result<DbusPath> {
-        self._inner.seat()
+        self.0.seat()
     }
 
     /// Property: PAM service name that registered the session
     #[inline]
     pub fn get_service(&self) -> zbus::Result<String> {
-        self._inner.service()
+        self.0.service()
     }
 
     /// Property: `State` of the session
     #[inline]
     pub fn get_state(&self) -> zbus::Result<SessionState> {
-        self._inner.state().map(|v| v.as_str().into())
+        self.0.state().map(|v| v.as_str().into())
     }
 
     /// Property: kernel TTY path of the session if this is a text login.
     /// If not this None.
     #[inline]
     pub fn get_tty(&self) -> zbus::Result<Option<String>> {
-        self._inner.tty().map(|s| {
+        self.0.tty().map(|s| {
             if s.is_empty() {
                 return Some(s);
             }
@@ -292,13 +326,13 @@ impl<'a> SessionInterface<'a> {
     /// Property: Get time since session was created (realtime)
     #[inline]
     pub fn get_timestamp(&self) -> zbus::Result<Duration> {
-        self._inner.timestamp().map(|t| Duration::from_micros(t))
+        self.0.timestamp().map(|t| Duration::from_micros(t))
     }
 
     /// Property: Get time since session was created (wal time)
     #[inline]
     pub fn get_timestamp_monotonic(&self) -> zbus::Result<Duration> {
-        self._inner
+        self.0
             .timestamp_monotonic()
             .map(|t| Duration::from_micros(t))
     }
@@ -306,19 +340,19 @@ impl<'a> SessionInterface<'a> {
     /// Property: Session type
     #[inline]
     pub fn get_type(&self) -> zbus::Result<SessionType> {
-        self._inner.type_().map(|v| v.as_str().into())
+        self.0.type_().map(|v| v.as_str().into())
     }
 
     /// Property: User the session belongs to
     #[inline]
     pub fn get_user(&self) -> zbus::Result<UserSelf> {
-        self._inner.user()
+        self.0.user()
     }
 
     /// Property: Virtual terminal number of the session if there is any, 0 otherwise.
     #[inline]
     pub fn get_vtnr(&self) -> zbus::Result<u32> {
-        self._inner.vtnr()
+        self.0.vtnr()
     }
 
     #[inline]
@@ -327,7 +361,7 @@ impl<'a> SessionInterface<'a> {
         callback: C,
     ) -> zbus::fdo::Result<SignalHandlerId>
         where C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static{
-        self._inner.connect_lock(callback)
+        self.0.connect_lock(callback)
     }
 
     #[inline]
@@ -336,7 +370,7 @@ impl<'a> SessionInterface<'a> {
         callback: C,
     ) -> zbus::fdo::Result<SignalHandlerId>
     where C: FnMut(u32, u32, &str) -> std::result::Result<(), zbus::Error> + Send + 'static {
-        self._inner.connect_pause_device(callback)
+        self.0.connect_pause_device(callback)
     }
 
     #[inline]
@@ -345,7 +379,7 @@ impl<'a> SessionInterface<'a> {
         callback: C,
     ) -> zbus::fdo::Result<SignalHandlerId>
     where C: FnMut(u32, u32, i32) -> std::result::Result<(), zbus::Error> + Send + 'static {
-        self._inner.connect_resume_device(callback)
+        self.0.connect_resume_device(callback)
     }
 
     #[inline]
@@ -354,23 +388,23 @@ impl<'a> SessionInterface<'a> {
         callback: C,
     ) -> zbus::fdo::Result<SignalHandlerId>
     where C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static{
-        self._inner.connect_unlock(callback)
+        self.0.connect_unlock(callback)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::ManagerInterface;
-    use crate::SessionInterface;
+    use crate::ManagerProxy;
+    use crate::SessionProxy;
     use core::panic;
     use zbus::{Connection, SignalReceiver};
 
     #[test]
     fn timestamps() {
         let connection = Connection::new_system().unwrap();
-        let manager = ManagerInterface::new(&connection).unwrap();
+        let manager = ManagerProxy::new(&connection).unwrap();
         let sessions = manager.list_sessions().unwrap();
-        let session = SessionInterface::new(&connection, &sessions[0]).unwrap();
+        let session = SessionProxy::new(&connection, &sessions[0]).unwrap();
 
         let time1 = session.get_timestamp().unwrap();
         assert!(time1.as_secs() > 0);
@@ -383,11 +417,11 @@ mod tests {
     fn list_active_session_types() {
         use crate::types::SessionType;
         let connection = Connection::new_system().unwrap();
-        let manager = ManagerInterface::new(&connection).unwrap();
+        let manager = ManagerProxy::new(&connection).unwrap();
         let sessions = manager.list_sessions().unwrap();
 
         for session in sessions {
-            let session_proxy = SessionInterface::new(&connection, &session).unwrap();
+            let session_proxy = SessionProxy::new(&connection, &session).unwrap();
             if session_proxy.get_active().unwrap() {
                 let st = session_proxy.get_type().unwrap();
                 match st {
@@ -407,9 +441,9 @@ mod tests {
     #[test]
     fn signals() {
         let connection = Connection::new_system().unwrap();
-        let manager = ManagerInterface::new(&connection).unwrap();
+        let manager = ManagerProxy::new(&connection).unwrap();
         let sessions = manager.list_sessions().unwrap();
-        let session = SessionInterface::new(&connection, &sessions[0]).unwrap();
+        let session = SessionProxy::new(&connection, &sessions[0]).unwrap();
 
         session.connect_lock(|| Ok(())).unwrap();
 
@@ -421,9 +455,9 @@ mod tests {
     #[test]
     fn properties() {
         let connection = Connection::new_system().unwrap();
-        let manager = ManagerInterface::new(&connection).unwrap();
+        let manager = ManagerProxy::new(&connection).unwrap();
         let sessions = manager.list_sessions().unwrap();
-        let session = SessionInterface::new(&connection, &sessions[0]).unwrap();
+        let session = SessionProxy::new(&connection, &sessions[0]).unwrap();
 
         assert!(session.get_active().is_ok());
         assert!(session.get_audit().is_ok());

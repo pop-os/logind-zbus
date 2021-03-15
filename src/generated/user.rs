@@ -26,68 +26,85 @@ use crate::types::DbusPath;
 #[dbus_proxy(interface = "org.freedesktop.login1.User", default_service = "org.freedesktop.login1",)]
 trait User {
     /// Kill method
+    #[inline]
     fn kill(&self, signal_number: i32) -> zbus::Result<()>;
 
     /// Terminate method
+    #[inline]
     fn terminate(&self) -> zbus::Result<()>;
 
     /// Display property
     #[dbus_proxy(property)]
+    #[inline]
     fn display(&self) -> zbus::Result<DbusPath>;
 
     /// GID property
     #[dbus_proxy(property)]
+    #[inline]
     fn gid(&self) -> zbus::Result<u32>;
 
     /// IdleHint property
     #[dbus_proxy(property)]
+    #[inline]
     fn idle_hint(&self) -> zbus::Result<bool>;
 
     /// IdleSinceHint property
     #[dbus_proxy(property)]
+    #[inline]
     fn idle_since_hint(&self) -> zbus::Result<u64>;
 
     /// IdleSinceHintMonotonic property
     #[dbus_proxy(property)]
+    #[inline]
     fn idle_since_hint_monotonic(&self) -> zbus::Result<u64>;
 
     /// Linger property
     #[dbus_proxy(property)]
+    #[inline]
     fn linger(&self) -> zbus::Result<bool>;
 
     /// Name property
     #[dbus_proxy(property)]
+    #[inline]
     fn name(&self) -> zbus::Result<String>;
 
     /// RuntimePath property
     #[dbus_proxy(property)]
+    #[inline]
     fn runtime_path(&self) -> zbus::Result<String>;
 
     /// Service property
     #[dbus_proxy(property)]
+    #[inline]
     fn service(&self) -> zbus::Result<String>;
 
     // /// Sessions property
     // #[dbus_proxy(property)]
-    // fn sessions(&self) -> zbus::Result<Vec<DbusPath>>;
+    // #[inline]
+    fn sessions(&self) -> zbus::Result<Vec<DbusPath>>;
 
     /// Slice property
     #[dbus_proxy(property)]
+    #[inline]
     fn slice(&self) -> zbus::Result<String>;
 
     /// State property
     #[dbus_proxy(property)]
+    #[inline]
     fn state(&self) -> zbus::Result<String>;
 
     /// Timestamp property
     #[dbus_proxy(property)]
+    #[inline]
     fn timestamp(&self) -> zbus::Result<u64>;
 
     /// TimestampMonotonic property
     #[dbus_proxy(property)]
+    #[inline]
     fn timestamp_monotonic(&self) -> zbus::Result<u64>;
 
     /// UID property
     #[dbus_proxy(property)]
+    #[inline]
     fn uid(&self) -> zbus::Result<u32>;
 }

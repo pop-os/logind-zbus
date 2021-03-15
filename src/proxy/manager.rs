@@ -6,6 +6,10 @@ use zbus::azync::Connection;
 use zbus::Connection;
 use zbus::{Result, SignalHandlerId};
 use zvariant::OwnedObjectPath;
+#[cfg(feature = "azync")]
+use zbus::azync::Proxy;
+#[cfg(not(feature = "azync"))]
+use zbus::Proxy;
 
 use crate::{
     generated::manager,
@@ -32,33 +36,50 @@ use crate::{
 /// ```
 /// <ManagerInterface>.get_proxy().connect_<function name>()
 /// ```
-pub struct ManagerInterface<'a> {
-    _inner: manager::ManagerProxy<'a>,
+pub struct ManagerProxy<'a>(manager::ManagerProxy<'a>);
+
+impl<'a> std::ops::Deref for ManagerProxy<'a> {
+    type Target = Proxy<'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-impl<'a> ManagerInterface<'a> {
+impl<'a> std::ops::DerefMut for ManagerProxy<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<'a> std::convert::AsRef<Proxy<'a>> for ManagerProxy<'a> {
+    fn as_ref(&self) -> &Proxy<'a> {
+        &*self
+    }
+}
+
+impl<'a> std::convert::AsMut<Proxy<'a>> for ManagerProxy<'a> {
+    fn as_mut(&mut self) -> &mut Proxy<'a> {
+        &mut *self
+    }
+}
+
+impl<'a> ManagerProxy<'a> {
     #[inline]
     pub fn new(connection: &Connection) -> Result<Self> {
-        Ok(Self {
-            _inner: manager::ManagerProxy::new(&connection)?,
-        })
-    }
-
-    /// Borrow the underlying `ManagerProxy` for use with zbus directly
-    pub fn get_proxy(&self) -> &manager::ManagerProxy {
-        &self._inner
+        Ok(Self(manager::ManagerProxy::new(&connection)?))
     }
 
     /// Brings the session with the specified ID into the foreground
     #[inline]
     pub fn activate_session(&self, session_id: &str) -> zbus::Result<()> {
-        self._inner.activate_session(session_id)
+        self.0.activate_session(session_id)
     }
 
     /// Brings the session with the specified ID into the foreground if the seat ID matches
     #[inline]
     pub fn activate_session_on_seat(&self, session_id: &str, seat_id: &str) -> zbus::Result<()> {
-        self._inner.activate_session_on_seat(session_id, seat_id)
+        self.0.activate_session_on_seat(session_id, seat_id)
     }
 
     /// Used to assign a specific device to a specific seat. The device is
@@ -70,43 +91,43 @@ impl<'a> ManagerInterface<'a> {
         sysfs_path: &str,
         interactive: bool,
     ) -> zbus::Result<()> {
-        self._inner.attach_device(seat_id, sysfs_path, interactive)
+        self.0.attach_device(seat_id, sysfs_path, interactive)
     }
 
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_halt(&self) -> zbus::Result<IsSupported> {
-        self._inner.can_halt().map(|v| v.as_str().into())
+        self.0.can_halt().map(|v| v.as_str().into())
     }
 
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_hibernate(&self) -> zbus::Result<IsSupported> {
-        self._inner.can_hibernate().map(|v| v.as_str().into())
+        self.0.can_hibernate().map(|v| v.as_str().into())
     }
 
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_hybrid_sleep(&self) -> zbus::Result<IsSupported> {
-        self._inner.can_hybrid_sleep().map(|v| v.as_str().into())
+        self.0.can_hybrid_sleep().map(|v| v.as_str().into())
     }
 
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_power_off(&self) -> zbus::Result<IsSupported> {
-        self._inner.can_power_off().map(|v| v.as_str().into())
+        self.0.can_power_off().map(|v| v.as_str().into())
     }
 
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_reboot(&self) -> zbus::Result<IsSupported> {
-        self._inner.can_reboot().map(|v| v.as_str().into())
+        self.0.can_reboot().map(|v| v.as_str().into())
     }
 
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_reboot_parameter(&self) -> zbus::Result<IsSupported> {
-        self._inner
+        self.0
             .can_reboot_parameter()
             .map(|v| v.as_str().into())
     }
@@ -114,7 +135,7 @@ impl<'a> ManagerInterface<'a> {
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_reboot_to_boot_loader_entry(&self) -> zbus::Result<IsSupported> {
-        self._inner
+        self.0
             .can_reboot_to_boot_loader_entry()
             .map(|v| v.as_str().into())
     }
@@ -122,7 +143,7 @@ impl<'a> ManagerInterface<'a> {
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_reboot_to_boot_loader_menu(&self) -> zbus::Result<IsSupported> {
-        self._inner
+        self.0
             .can_reboot_to_boot_loader_menu()
             .map(|v| v.as_str().into())
     }
@@ -130,7 +151,7 @@ impl<'a> ManagerInterface<'a> {
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_reboot_to_firmware_setup(&self) -> zbus::Result<IsSupported> {
-        self._inner
+        self.0
             .can_reboot_to_firmware_setup()
             .map(|v| v.as_str().into())
     }
@@ -138,60 +159,60 @@ impl<'a> ManagerInterface<'a> {
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_suspend(&self) -> zbus::Result<IsSupported> {
-        self._inner.can_suspend().map(|v| v.as_str().into())
+        self.0.can_suspend().map(|v| v.as_str().into())
     }
 
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_suspend_then_hibernate(&self) -> zbus::Result<IsSupported> {
-        self._inner
+        self.0
             .can_suspend_then_hibernate()
             .map(|v| v.as_str().into())
     }
 
     #[inline]
     pub fn cancel_scheduled_shutdown(&self) -> zbus::Result<bool> {
-        self._inner.cancel_scheduled_shutdown()
+        self.0.cancel_scheduled_shutdown()
     }
 
     #[inline]
     pub fn flush_devices(&self, interactive: bool) -> zbus::Result<()> {
-        self._inner.flush_devices(interactive)
+        self.0.flush_devices(interactive)
     }
 
     #[inline]
     pub fn get_seat(&self, seat_id: &str) -> zbus::Result<zvariant::OwnedObjectPath> {
-        self._inner.get_seat(seat_id)
+        self.0.get_seat(seat_id)
     }
 
     #[inline]
     pub fn get_session(&self, session_id: &str) -> zbus::Result<zvariant::OwnedObjectPath> {
-        self._inner.get_session(session_id)
+        self.0.get_session(session_id)
     }
 
     #[inline]
     pub fn get_session_by_pid(&self, pid: u32) -> zbus::Result<zvariant::OwnedObjectPath> {
-        self._inner.get_session_by_pid(pid)
+        self.0.get_session_by_pid(pid)
     }
 
     #[inline]
     pub fn get_user(&self, uid: u32) -> zbus::Result<zvariant::OwnedObjectPath> {
-        self._inner.get_user(uid)
+        self.0.get_user(uid)
     }
 
     #[inline]
     pub fn get_user_by_pid(&self, pid: u32) -> zbus::Result<zvariant::OwnedObjectPath> {
-        self._inner.get_user_by_pid(pid)
+        self.0.get_user_by_pid(pid)
     }
 
     #[inline]
     pub fn halt(&self, interactive: bool) -> zbus::Result<()> {
-        self._inner.halt(interactive)
+        self.0.halt(interactive)
     }
 
     #[inline]
     pub fn hibernate(&self, interactive: bool) -> zbus::Result<()> {
-        self._inner.hibernate(interactive)
+        self.0.hibernate(interactive)
     }
 
     #[inline]
@@ -202,12 +223,12 @@ impl<'a> ManagerInterface<'a> {
         why: &str,
         mode: &str,
     ) -> zbus::Result<std::os::unix::io::RawFd> {
-        self._inner.inhibit(what, who, why, mode)
+        self.0.inhibit(what, who, why, mode)
     }
 
     #[inline]
     pub fn hybrid_sleep(&self, interactive: bool) -> zbus::Result<()> {
-        self._inner.hybrid_sleep(interactive)
+        self.0.hybrid_sleep(interactive)
     }
 
     #[inline]
@@ -217,57 +238,57 @@ impl<'a> ManagerInterface<'a> {
         who: &str,
         signal_number: i32,
     ) -> zbus::Result<()> {
-        self._inner.kill_session(session_id, who, signal_number)
+        self.0.kill_session(session_id, who, signal_number)
     }
 
     #[inline]
     pub fn kill_user(&self, uid: u32, signal_number: i32) -> zbus::Result<()> {
-        self._inner.kill_user(uid, signal_number)
+        self.0.kill_user(uid, signal_number)
     }
 
     #[inline]
     pub fn list_inhibitors(&self) -> zbus::Result<Vec<(String, String, String, String, u32, u32)>> {
-        self._inner.list_inhibitors()
+        self.0.list_inhibitors()
     }
 
     #[inline]
     pub fn list_seats(&self) -> zbus::Result<Vec<DbusPath>> {
-        self._inner.list_seats()
+        self.0.list_seats()
     }
 
     #[inline]
     pub fn list_sessions(&self) -> zbus::Result<Vec<SessionInfo>> {
-        self._inner.list_sessions()
+        self.0.list_sessions()
     }
 
     #[inline]
     pub fn list_users(&self) -> zbus::Result<Vec<UserInfo>> {
-        self._inner.list_users()
+        self.0.list_users()
     }
 
     #[inline]
     pub fn lock_session(&self, session_id: &str) -> zbus::Result<()> {
-        self._inner.lock_session(session_id)
+        self.0.lock_session(session_id)
     }
 
     #[inline]
     pub fn lock_sessions(&self) -> zbus::Result<()> {
-        self._inner.lock_sessions()
+        self.0.lock_sessions()
     }
 
     #[inline]
     pub fn power_off(&self, interactive: bool) -> zbus::Result<()> {
-        self._inner.power_off(interactive)
+        self.0.power_off(interactive)
     }
 
     #[inline]
     pub fn reboot(&self, interactive: bool) -> zbus::Result<()> {
-        self._inner.reboot(interactive)
+        self.0.reboot(interactive)
     }
 
     #[inline]
     pub fn release_session(&self, session_id: &str) -> zbus::Result<()> {
-        self._inner.release_session(session_id)
+        self.0.release_session(session_id)
     }
 
     #[inline]
@@ -276,289 +297,289 @@ impl<'a> ManagerInterface<'a> {
         shutdown_type: ShutdownType,
         micros: Duration,
     ) -> zbus::Result<()> {
-        self._inner
+        self.0
             .schedule_shutdown(shutdown_type.into(), micros.as_micros() as u64)
     }
 
     #[inline]
     pub fn set_reboot_parameter(&self, parameter: &str) -> zbus::Result<()> {
-        self._inner.set_reboot_parameter(parameter)
+        self.0.set_reboot_parameter(parameter)
     }
 
     #[inline]
     pub fn set_reboot_to_boot_loader_entry(&self, boot_loader_entry: &str) -> zbus::Result<()> {
-        self._inner
+        self.0
             .set_reboot_to_boot_loader_entry(boot_loader_entry)
     }
 
     #[inline]
     pub fn set_reboot_to_boot_loader_menu(&self, timeout: Duration) -> zbus::Result<()> {
-        self._inner
+        self.0
             .set_reboot_to_boot_loader_menu(timeout.as_secs())
     }
 
     #[inline]
     pub fn set_reboot_to_firmware_setup(&self, enable: bool) -> zbus::Result<()> {
-        self._inner.set_reboot_to_firmware_setup(enable)
+        self.0.set_reboot_to_firmware_setup(enable)
     }
 
     #[inline]
     pub fn set_user_linger(&self, uid: u32, enable: bool, interactive: bool) -> zbus::Result<()> {
-        self._inner.set_user_linger(uid, enable, interactive)
+        self.0.set_user_linger(uid, enable, interactive)
     }
 
     #[inline]
     pub fn set_wall_message(&self, wall_message: &str, enable: bool) -> zbus::Result<()> {
-        self._inner.set_wall_message(wall_message, enable)
+        self.0.set_wall_message(wall_message, enable)
     }
 
     #[inline]
     pub fn suspend(&self, interactive: bool) -> zbus::Result<()> {
-        self._inner.suspend(interactive)
+        self.0.suspend(interactive)
     }
 
     #[inline]
     pub fn suspend_then_hibernate(&self, interactive: bool) -> zbus::Result<()> {
-        self._inner.suspend_then_hibernate(interactive)
+        self.0.suspend_then_hibernate(interactive)
     }
 
     #[inline]
     pub fn terminate_seat(&self, seat_id: &str) -> zbus::Result<()> {
-        self._inner.terminate_seat(seat_id)
+        self.0.terminate_seat(seat_id)
     }
 
     #[inline]
     pub fn terminate_session(&self, session_id: &str) -> zbus::Result<()> {
-        self._inner.terminate_session(session_id)
+        self.0.terminate_session(session_id)
     }
 
     #[inline]
     pub fn terminate_user(&self, uid: u32) -> zbus::Result<()> {
-        self._inner.terminate_user(uid)
+        self.0.terminate_user(uid)
     }
 
     #[inline]
     pub fn unlock_session(&self, session_id: &str) -> zbus::Result<()> {
-        self._inner.unlock_session(session_id)
+        self.0.unlock_session(session_id)
     }
 
     #[inline]
     pub fn unlock_sessions(&self) -> zbus::Result<()> {
-        self._inner.unlock_sessions()
+        self.0.unlock_sessions()
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
     #[inline]
     pub fn get_block_inhibited(&self) -> zbus::Result<String> {
-        self._inner.block_inhibited()
+        self.0.block_inhibited()
     }
 
     #[inline]
     pub fn get_boot_loader_entries(&self) -> zbus::Result<Vec<String>> {
-        self._inner.boot_loader_entries()
+        self.0.boot_loader_entries()
     }
 
     #[inline]
     pub fn get_delay_inhibited(&self) -> zbus::Result<String> {
-        self._inner.delay_inhibited()
+        self.0.delay_inhibited()
     }
 
     #[inline]
     pub fn get_docked(&self) -> zbus::Result<bool> {
-        self._inner.docked()
+        self.0.docked()
     }
 
     #[inline]
     pub fn set_enable_wall_messages(&self, value: bool) -> zbus::Result<()> {
-        self._inner.set_enable_wall_messages(value)
+        self.0.set_enable_wall_messages(value)
     }
 
     #[inline]
     pub fn get_handle_hibernate_key(&self) -> zbus::Result<String> {
-        self._inner.handle_hibernate_key()
+        self.0.handle_hibernate_key()
     }
 
     #[inline]
     pub fn get_handle_lid_switch(&self) -> zbus::Result<String> {
-        self._inner.handle_lid_switch()
+        self.0.handle_lid_switch()
     }
 
     #[inline]
     pub fn get_handle_lid_switch_docked(&self) -> zbus::Result<String> {
-        self._inner.handle_lid_switch_docked()
+        self.0.handle_lid_switch_docked()
     }
 
     #[inline]
     pub fn get_handle_lid_switch_external_power(&self) -> zbus::Result<String> {
-        self._inner.handle_lid_switch_external_power()
+        self.0.handle_lid_switch_external_power()
     }
 
     #[inline]
     pub fn get_handle_power_key(&self) -> zbus::Result<String> {
-        self._inner.handle_power_key()
+        self.0.handle_power_key()
     }
 
     #[inline]
     pub fn get_handle_suspend_key(&self) -> zbus::Result<String> {
-        self._inner.handle_suspend_key()
+        self.0.handle_suspend_key()
     }
 
     #[inline]
     pub fn get_holdoff_timeout_usec(&self) -> zbus::Result<Duration> {
-        self._inner
+        self.0
             .holdoff_timeout_usec()
             .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
     pub fn get_idle_action(&self) -> zbus::Result<String> {
-        self._inner.idle_action()
+        self.0.idle_action()
     }
 
     #[inline]
     pub fn get_idle_action_usec(&self) -> zbus::Result<Duration> {
-        self._inner
+        self.0
             .idle_action_usec()
             .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
     pub fn get_idle_hint(&self) -> zbus::Result<bool> {
-        self._inner.idle_hint()
+        self.0.idle_hint()
     }
 
     #[inline]
     pub fn get_idle_since_hint(&self) -> zbus::Result<Duration> {
-        self._inner
+        self.0
             .idle_since_hint()
             .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
     pub fn get_idle_since_hint_monotonic(&self) -> zbus::Result<Duration> {
-        self._inner
+        self.0
             .idle_since_hint_monotonic()
             .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
     pub fn get_inhibit_delay_max_usec(&self) -> zbus::Result<Duration> {
-        self._inner
+        self.0
             .inhibit_delay_max_usec()
             .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
     pub fn get_inhibitors_max(&self) -> zbus::Result<u64> {
-        self._inner.inhibitors_max()
+        self.0.inhibitors_max()
     }
 
     #[inline]
     pub fn get_kill_exclude_users(&self) -> zbus::Result<Vec<String>> {
-        self._inner.kill_exclude_users()
+        self.0.kill_exclude_users()
     }
 
     #[inline]
     pub fn get_kill_only_users(&self) -> zbus::Result<Vec<String>> {
-        self._inner.kill_only_users()
+        self.0.kill_only_users()
     }
 
     #[inline]
     pub fn get_kill_user_processes(&self) -> zbus::Result<bool> {
-        self._inner.kill_user_processes()
+        self.0.kill_user_processes()
     }
 
     #[inline]
     pub fn get_lid_closed(&self) -> zbus::Result<bool> {
-        self._inner.lid_closed()
+        self.0.lid_closed()
     }
 
     #[inline]
     pub fn get_nauto_vts(&self) -> zbus::Result<u32> {
-        self._inner.nauto_vts()
+        self.0.nauto_vts()
     }
 
     #[inline]
     pub fn get_ncurrent_inhibitors(&self) -> zbus::Result<u64> {
-        self._inner.ncurrent_inhibitors()
+        self.0.ncurrent_inhibitors()
     }
 
     #[inline]
     pub fn get_ncurrent_sessions(&self) -> zbus::Result<u64> {
-        self._inner.ncurrent_sessions()
+        self.0.ncurrent_sessions()
     }
 
     #[inline]
     pub fn get_on_external_power(&self) -> zbus::Result<bool> {
-        self._inner.on_external_power()
+        self.0.on_external_power()
     }
 
     #[inline]
     pub fn get_preparing_for_shutdown(&self) -> zbus::Result<bool> {
-        self._inner.preparing_for_shutdown()
+        self.0.preparing_for_shutdown()
     }
 
     #[inline]
     pub fn get_preparing_for_sleep(&self) -> zbus::Result<bool> {
-        self._inner.preparing_for_sleep()
+        self.0.preparing_for_sleep()
     }
 
     #[inline]
     pub fn get_reboot_parameter(&self) -> zbus::Result<String> {
-        self._inner.reboot_parameter()
+        self.0.reboot_parameter()
     }
 
     #[inline]
     pub fn get_reboot_to_boot_loader_entry(&self) -> zbus::Result<String> {
-        self._inner.reboot_to_boot_loader_entry()
+        self.0.reboot_to_boot_loader_entry()
     }
 
     #[inline]
     pub fn get_reboot_to_boot_loader_menu(&self) -> zbus::Result<u64> {
-        self._inner.reboot_to_boot_loader_menu()
+        self.0.reboot_to_boot_loader_menu()
     }
 
     #[inline]
     pub fn get_reboot_to_firmware_setup(&self) -> zbus::Result<bool> {
-        self._inner.reboot_to_firmware_setup()
+        self.0.reboot_to_firmware_setup()
     }
 
     #[inline]
     pub fn get_remove_ipc(&self) -> zbus::Result<bool> {
-        self._inner.remove_ipc()
+        self.0.remove_ipc()
     }
 
     #[inline]
     pub fn get_runtime_directory_inodes_max(&self) -> zbus::Result<u64> {
-        self._inner.runtime_directory_inodes_max()
+        self.0.runtime_directory_inodes_max()
     }
 
     #[inline]
     pub fn get_runtime_directory_size(&self) -> zbus::Result<u64> {
-        self._inner.runtime_directory_size()
+        self.0.runtime_directory_size()
     }
 
     #[inline]
     pub fn get_scheduled_shutdown(&self) -> zbus::Result<ScheduledShutdown> {
-        self._inner.scheduled_shutdown()
+        self.0.scheduled_shutdown()
     }
 
     #[inline]
     pub fn get_sessions_max(&self) -> zbus::Result<u64> {
-        self._inner.sessions_max()
+        self.0.sessions_max()
     }
 
     #[inline]
     pub fn get_user_stop_delay_usec(&self) -> zbus::Result<Duration> {
-        self._inner
+        self.0
             .user_stop_delay_usec()
             .map(|usec| Duration::from_micros(usec))
     }
 
     #[inline]
     pub fn get_wall_message(&self) -> zbus::Result<String> {
-        self._inner.wall_message()
+        self.0.wall_message()
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -568,7 +589,7 @@ impl<'a> ManagerInterface<'a> {
     where
         C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
-        self._inner.connect_prepare_for_shutdown(callback)
+        self.0.connect_prepare_for_shutdown(callback)
     }
 
     #[inline]
@@ -576,7 +597,7 @@ impl<'a> ManagerInterface<'a> {
     where
         C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
-        self._inner.connect_prepare_for_sleep(callback)
+        self.0.connect_prepare_for_sleep(callback)
     }
 
     #[inline]
@@ -584,7 +605,7 @@ impl<'a> ManagerInterface<'a> {
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
-        self._inner.connect_seat_new(callback)
+        self.0.connect_seat_new(callback)
     }
 
     #[inline]
@@ -592,7 +613,7 @@ impl<'a> ManagerInterface<'a> {
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
-        self._inner.connect_seat_removed(callback)
+        self.0.connect_seat_removed(callback)
     }
 
     #[inline]
@@ -600,7 +621,7 @@ impl<'a> ManagerInterface<'a> {
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
-        self._inner.connect_session_new(callback)
+        self.0.connect_session_new(callback)
     }
 
     #[inline]
@@ -608,7 +629,7 @@ impl<'a> ManagerInterface<'a> {
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
-        self._inner.connect_session_removed(callback)
+        self.0.connect_session_removed(callback)
     }
 
     #[inline]
@@ -616,7 +637,7 @@ impl<'a> ManagerInterface<'a> {
     where
         C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
-        self._inner.connect_user_new(callback)
+        self.0.connect_user_new(callback)
     }
 
     #[inline]
@@ -624,19 +645,19 @@ impl<'a> ManagerInterface<'a> {
     where
         C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
-        self._inner.connect_user_removed(callback)
+        self.0.connect_user_removed(callback)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::ManagerInterface;
+    use crate::ManagerProxy;
     use zbus::Connection;
 
     #[test]
     fn timestamps() {
         let connection = Connection::new_system().unwrap();
-        let manager = ManagerInterface::new(&connection).unwrap();
+        let manager = ManagerProxy::new(&connection).unwrap();
 
         assert!(manager.can_suspend().is_ok());
     }
@@ -644,7 +665,7 @@ mod tests {
     #[test]
     fn properties() {
         let connection = Connection::new_system().unwrap();
-        let manager = ManagerInterface::new(&connection).unwrap();
+        let manager = ManagerProxy::new(&connection).unwrap();
 
         assert!(manager.get_block_inhibited().is_ok());
         assert!(manager.get_boot_loader_entries().is_ok());
