@@ -23,7 +23,10 @@ use zbus::dbus_proxy;
 
 use crate::types::DbusPath;
 
-#[dbus_proxy(interface = "org.freedesktop.login1.User", default_service = "org.freedesktop.login1",)]
+#[dbus_proxy(
+    interface = "org.freedesktop.login1.User",
+    default_service = "org.freedesktop.login1"
+)]
 trait User {
     /// Kill method
     #[inline]
@@ -81,7 +84,7 @@ trait User {
     // /// Sessions property
     // #[dbus_proxy(property)]
     // #[inline]
-    fn sessions(&self) -> zbus::Result<Vec<DbusPath>>;
+    // fn sessions(&self) -> zbus::Result<Vec<DbusPath>>;
 
     /// Slice property
     #[dbus_proxy(property)]

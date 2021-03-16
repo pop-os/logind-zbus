@@ -21,7 +21,7 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::{Device, DbusPath, UserSelf};
+use crate::types::{Device, SeatPath, UserPath};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Session",
@@ -74,8 +74,7 @@ trait Session {
 
     /// TakeDevice method
     #[inline]
-    fn take_device(&self, major: u32, minor: u32)
-        -> zbus::Result<Device>;
+    fn take_device(&self, major: u32, minor: u32) -> zbus::Result<Device>;
 
     /// Terminate method
     #[inline]
@@ -193,7 +192,7 @@ trait Session {
     /// Seat property
     #[dbus_proxy(property)]
     #[inline]
-    fn seat(&self) -> zbus::Result<DbusPath>;
+    fn seat(&self) -> zbus::Result<SeatPath>;
 
     /// Service property
     #[dbus_proxy(property)]
@@ -228,7 +227,7 @@ trait Session {
     /// User property
     #[dbus_proxy(property)]
     #[inline]
-    fn user(&self) -> zbus::Result<UserSelf>;
+    fn user(&self) -> zbus::Result<UserPath>;
 
     /// VTNr property
     #[dbus_proxy(property)]

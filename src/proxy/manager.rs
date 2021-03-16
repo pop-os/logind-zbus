@@ -2,19 +2,16 @@ use std::time::Duration;
 
 #[cfg(feature = "azync")]
 use zbus::azync::Connection;
-#[cfg(not(feature = "azync"))]
-use zbus::Connection;
-use zbus::{Result, SignalHandlerId};
-use zvariant::OwnedObjectPath;
 #[cfg(feature = "azync")]
 use zbus::azync::Proxy;
 #[cfg(not(feature = "azync"))]
+use zbus::Connection;
+#[cfg(not(feature = "azync"))]
 use zbus::Proxy;
+use zbus::{Result, SignalHandlerId};
+use zvariant::OwnedObjectPath;
 
-use crate::{
-    generated::manager,
-    types::{DbusPath, IsSupported, ScheduledShutdown, SessionInfo, ShutdownType, UserInfo},
-};
+use crate::{generated::manager, types::{IsSupported, ScheduledShutdown, SeatPath, SessionInfo, ShutdownType, UserInfo}};
 
 /// Proxy wrapper for the logind `Manager` dbus interface
 ///
@@ -127,9 +124,7 @@ impl<'a> ManagerProxy<'a> {
     /// Check if supported and the calling user is allowed to execute it
     #[inline]
     pub fn can_reboot_parameter(&self) -> zbus::Result<IsSupported> {
-        self.0
-            .can_reboot_parameter()
-            .map(|v| v.as_str().into())
+        self.0.can_reboot_parameter().map(|v| v.as_str().into())
     }
 
     /// Check if supported and the calling user is allowed to execute it
@@ -252,7 +247,7 @@ impl<'a> ManagerProxy<'a> {
     }
 
     #[inline]
-    pub fn list_seats(&self) -> zbus::Result<Vec<DbusPath>> {
+    pub fn list_seats(&self) -> zbus::Result<Vec<SeatPath>> {
         self.0.list_seats()
     }
 
@@ -308,14 +303,12 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn set_reboot_to_boot_loader_entry(&self, boot_loader_entry: &str) -> zbus::Result<()> {
-        self.0
-            .set_reboot_to_boot_loader_entry(boot_loader_entry)
+        self.0.set_reboot_to_boot_loader_entry(boot_loader_entry)
     }
 
     #[inline]
     pub fn set_reboot_to_boot_loader_menu(&self, timeout: Duration) -> zbus::Result<()> {
-        self.0
-            .set_reboot_to_boot_loader_menu(timeout.as_secs())
+        self.0.set_reboot_to_boot_loader_menu(timeout.as_secs())
     }
 
     #[inline]
@@ -427,9 +420,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_holdoff_timeout_usec(&self) -> zbus::Result<Duration> {
-        self.0
-            .holdoff_timeout_usec()
-            .map(|usec| Duration::from_micros(usec))
+        self.0.holdoff_timeout_usec().map(Duration::from_micros)
     }
 
     #[inline]
@@ -439,9 +430,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_idle_action_usec(&self) -> zbus::Result<Duration> {
-        self.0
-            .idle_action_usec()
-            .map(|usec| Duration::from_micros(usec))
+        self.0.idle_action_usec().map(Duration::from_micros)
     }
 
     #[inline]
@@ -451,23 +440,19 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_idle_since_hint(&self) -> zbus::Result<Duration> {
-        self.0
-            .idle_since_hint()
-            .map(|usec| Duration::from_micros(usec))
+        self.0.idle_since_hint().map(Duration::from_micros)
     }
 
     #[inline]
     pub fn get_idle_since_hint_monotonic(&self) -> zbus::Result<Duration> {
         self.0
             .idle_since_hint_monotonic()
-            .map(|usec| Duration::from_micros(usec))
+            .map(Duration::from_micros)
     }
 
     #[inline]
     pub fn get_inhibit_delay_max_usec(&self) -> zbus::Result<Duration> {
-        self.0
-            .inhibit_delay_max_usec()
-            .map(|usec| Duration::from_micros(usec))
+        self.0.inhibit_delay_max_usec().map(Duration::from_micros)
     }
 
     #[inline]
@@ -572,9 +557,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_user_stop_delay_usec(&self) -> zbus::Result<Duration> {
-        self.0
-            .user_stop_delay_usec()
-            .map(|usec| Duration::from_micros(usec))
+        self.0.user_stop_delay_usec().map(Duration::from_micros)
     }
 
     #[inline]

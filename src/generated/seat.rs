@@ -21,7 +21,7 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::DbusPath;
+use crate::types::SessionPath;
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Seat",
@@ -51,7 +51,7 @@ trait Seat {
     /// ActiveSession property
     #[dbus_proxy(property)]
     #[inline]
-    fn active_session(&self) -> zbus::Result<DbusPath>;
+    fn active_session(&self) -> zbus::Result<SessionPath>;
 
     /// CanGraphical property
     #[dbus_proxy(property)]

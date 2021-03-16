@@ -1,16 +1,16 @@
 use std::time::Duration;
 
-use zbus::Result;
 #[cfg(feature = "azync")]
 use zbus::azync::Connection;
-#[cfg(not(feature = "azync"))]
-use zbus::Connection;
 #[cfg(feature = "azync")]
 use zbus::azync::Proxy;
 #[cfg(not(feature = "azync"))]
+use zbus::Connection;
+#[cfg(not(feature = "azync"))]
 use zbus::Proxy;
+use zbus::Result;
 
-use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, UserInfo, UserState}};
+use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, IntoUserPath, UserState}};
 /// Proxy wrapper for the logind `User` dbus interface
 ///
 /// All `get_*` methods are property getters
@@ -24,11 +24,12 @@ use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, UserInfo, UserState
 /// let connection = Connection::new_system().unwrap();
 /// let manager = ManagerProxy::new(&connection).unwrap();
 /// let users = manager.list_users().unwrap();
+///
 /// let user = UserProxy::new(&connection, &users[0]).unwrap();
-/// 
+///
 /// let time1 = user.get_timestamp().unwrap();
 /// assert!(time1.as_secs() > 0);
-/// 
+///
 /// let time2 = user.get_timestamp_monotonic().unwrap();
 /// assert!(time2.as_secs() > 0);
 /// ```
@@ -62,8 +63,12 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for UserProxy<'a> {
 
 impl<'a> UserProxy<'a> {
     #[inline]
-    pub fn new(connection: &Connection, user: &'a UserInfo) -> Result<Self> {
-        Ok(Self(user::UserProxy::new_for(&connection, DEFAULT_DEST, user.path())?))
+    pub fn new<U>(connection: &Connection, user: &'a U) -> Result<Self> where U: IntoUserPath {
+        Ok(Self(user::UserProxy::new_for(
+            &connection,
+            DEFAULT_DEST,
+            user.into_path_ref(),
+        )?))
     }
 
     #[inline]
@@ -100,13 +105,15 @@ impl<'a> UserProxy<'a> {
     /// Property: idle hint state of the user
     #[inline]
     pub fn get_is_idle_since_hint(&self) -> zbus::Result<Duration> {
-        self.0.idle_since_hint().map(|t| Duration::from_micros(t))
+        self.0.idle_since_hint().map(Duration::from_micros)
     }
 
     /// Property: idle hint state of the user
     #[inline]
     pub fn get_is_idle_since_hint_monotonic(&self) -> zbus::Result<Duration> {
-        self.0.idle_since_hint_monotonic().map(|t| Duration::from_micros(t))
+        self.0
+            .idle_since_hint_monotonic()
+            .map(Duration::from_micros)
     }
 
     /// Property: shows whether lingering is enabled for this user
@@ -137,7 +144,7 @@ impl<'a> UserProxy<'a> {
     }
 
     // #[inline]
-    // pub fn get_sessions(&self) -> Result<Vec<String>> {
+    // pub fn get_sessions(&self) -> Result<Vec<DbusPath>> {
     //     self.0.sessions()
     // }
 
@@ -157,13 +164,13 @@ impl<'a> UserProxy<'a> {
     /// Property: login time of the user in microseconds since the epoch (realtime)
     #[inline]
     pub fn get_timestamp(&self) -> zbus::Result<Duration> {
-        self.0.timestamp().map(|t| Duration::from_micros(t))
+        self.0.timestamp().map(Duration::from_micros)
     }
 
     /// Property: login time of the user in microseconds since the epoch (walltime)
     #[inline]
     pub fn get_timestamp_monotonic(&self) -> zbus::Result<Duration> {
-        self.0.timestamp_monotonic().map(|t| Duration::from_micros(t))
+        self.0.timestamp_monotonic().map(Duration::from_micros)
     }
 
     /// Property: Unix UID of the user

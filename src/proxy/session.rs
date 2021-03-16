@@ -2,21 +2,15 @@ use std::time::Duration;
 
 #[cfg(feature = "azync")]
 use zbus::azync::Connection;
-#[cfg(not(feature = "azync"))]
-use zbus::Connection;
-use zbus::{Result, SignalHandlerId};
 #[cfg(feature = "azync")]
 use zbus::azync::Proxy;
 #[cfg(not(feature = "azync"))]
+use zbus::Connection;
+#[cfg(not(feature = "azync"))]
 use zbus::Proxy;
+use zbus::{Result, SignalHandlerId};
 
-use crate::{
-    generated::session,
-    types::{
-        DbusPath, Device, SessionClass, SessionInfo, SessionState, SessionType, UserInfo, UserSelf,
-    },
-    DEFAULT_DEST,
-};
+use crate::{DEFAULT_DEST, generated::session, types::{Device, IntoSessionPath, SeatPath, SessionClass, SessionState, SessionType, UserPath}};
 
 /// Proxy wrapper for the logind `Session` dbus interface
 ///
@@ -76,8 +70,12 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for SessionProxy<'a> {
 }
 
 impl<'a> SessionProxy<'a> {
-    pub fn new(connection: &Connection, session: &'a SessionInfo) -> Result<Self> {
-        Ok(Self(session::SessionProxy::new_for(&connection, DEFAULT_DEST, session.path())?))
+    pub fn new<S>(connection: &Connection, session: &'a S) -> Result<Self> where S: IntoSessionPath {
+        Ok(Self(session::SessionProxy::new_for(
+            &connection,
+            DEFAULT_DEST,
+            session.into_path_ref(),
+        )?))
     }
 
     /// Borrow the underlying `SessionProxy` for use with zbus directly
@@ -88,7 +86,7 @@ impl<'a> SessionProxy<'a> {
     /// Deregister the signal handler with the ID handler_id.
     ///
     /// This method returns Ok(true) if a handler with the id handler_id is found
-    /// and removed; Ok(false) otherwise. 
+    /// and removed; Ok(false) otherwise.
     pub fn disconnect_signal(&self, handler_id: SignalHandlerId) -> zbus::fdo::Result<bool> {
         self.0.disconnect_signal(handler_id)
     }
@@ -101,7 +99,7 @@ impl<'a> SessionProxy<'a> {
 
     /// Send a signal to all processes of the user
     #[inline]
-    pub fn kill(&self, who: UserInfo, signal: i32) -> zbus::Result<()> {
+    pub fn kill(&self, who: UserPath, signal: i32) -> zbus::Result<()> {
         self.0.kill(&who.uid().to_string(), signal)
     }
 
@@ -295,7 +293,7 @@ impl<'a> SessionProxy<'a> {
 
     /// Property: seat this session belongs to if there is any
     #[inline]
-    pub fn get_seat(&self) -> zbus::Result<DbusPath> {
+    pub fn get_seat(&self) -> zbus::Result<SeatPath> {
         self.0.seat()
     }
 
@@ -326,15 +324,13 @@ impl<'a> SessionProxy<'a> {
     /// Property: Get time since session was created (realtime)
     #[inline]
     pub fn get_timestamp(&self) -> zbus::Result<Duration> {
-        self.0.timestamp().map(|t| Duration::from_micros(t))
+        self.0.timestamp().map(Duration::from_micros)
     }
 
     /// Property: Get time since session was created (wal time)
     #[inline]
     pub fn get_timestamp_monotonic(&self) -> zbus::Result<Duration> {
-        self.0
-            .timestamp_monotonic()
-            .map(|t| Duration::from_micros(t))
+        self.0.timestamp_monotonic().map(Duration::from_micros)
     }
 
     /// Property: Session type
@@ -345,7 +341,7 @@ impl<'a> SessionProxy<'a> {
 
     /// Property: User the session belongs to
     #[inline]
-    pub fn get_user(&self) -> zbus::Result<UserSelf> {
+    pub fn get_user(&self) -> zbus::Result<UserPath> {
         self.0.user()
     }
 
@@ -356,38 +352,34 @@ impl<'a> SessionProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_lock<C>(
-        &self,
-        callback: C,
-    ) -> zbus::fdo::Result<SignalHandlerId>
-        where C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static{
+    pub fn connect_lock<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    where
+        C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self.0.connect_lock(callback)
     }
 
     #[inline]
-    pub fn connect_pause_device<C>(
-        &self,
-        callback: C,
-    ) -> zbus::fdo::Result<SignalHandlerId>
-    where C: FnMut(u32, u32, &str) -> std::result::Result<(), zbus::Error> + Send + 'static {
+    pub fn connect_pause_device<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    where
+        C: FnMut(u32, u32, &str) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self.0.connect_pause_device(callback)
     }
 
     #[inline]
-    pub fn connect_resume_device<C>(
-        &self,
-        callback: C,
-    ) -> zbus::fdo::Result<SignalHandlerId>
-    where C: FnMut(u32, u32, i32) -> std::result::Result<(), zbus::Error> + Send + 'static {
+    pub fn connect_resume_device<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    where
+        C: FnMut(u32, u32, i32) -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self.0.connect_resume_device(callback)
     }
 
     #[inline]
-    pub fn connect_unlock<C>(
-        &self,
-        callback: C,
-    ) -> zbus::fdo::Result<SignalHandlerId>
-    where C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static{
+    pub fn connect_unlock<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    where
+        C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static,
+    {
         self.0.connect_unlock(callback)
     }
 }
@@ -448,7 +440,7 @@ mod tests {
         session.connect_lock(|| Ok(())).unwrap();
 
         let mut sig_recv = SignalReceiver::new(connection);
-        sig_recv.receive_for(session.get_proxy());
+        sig_recv.receive_for(session.get_proxy()).unwrap();
         //sig_recv.next().unwrap();
     }
 

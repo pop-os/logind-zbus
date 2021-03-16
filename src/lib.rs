@@ -6,8 +6,8 @@ mod proxy;
 pub mod types;
 
 pub use proxy::manager::ManagerProxy;
-pub use proxy::session::SessionProxy;
 pub use proxy::seat::SeatProxy;
+pub use proxy::session::SessionProxy;
 pub use proxy::user::UserProxy;
 
 const DEFAULT_DEST: &str = "org.freedesktop.login1";

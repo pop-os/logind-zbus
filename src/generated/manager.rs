@@ -24,7 +24,7 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::{DbusPath, ScheduledShutdown, SessionInfo, UserInfo};
+use crate::types::{ScheduledShutdown, SeatPath, SessionInfo, UserInfo};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Manager",
@@ -182,7 +182,7 @@ trait Manager {
 
     /// ListSeats method
     #[inline]
-    fn list_seats(&self) -> zbus::Result<Vec<DbusPath>>;
+    fn list_seats(&self) -> zbus::Result<Vec<SeatPath>>;
 
     /// ListSessions method
     #[inline]
@@ -286,13 +286,20 @@ trait Manager {
     /// SeatRemoved signal
     #[dbus_proxy(signal)]
     #[inline]
-    fn seat_removed(&self, seat_id: &str, object_path: zvariant::OwnedObjectPath) -> zbus::Result<()>;
+    fn seat_removed(
+        &self,
+        seat_id: &str,
+        object_path: zvariant::OwnedObjectPath,
+    ) -> zbus::Result<()>;
 
     /// SessionNew signal
     #[dbus_proxy(signal)]
     #[inline]
-    fn session_new(&self, session_id: &str, object_path: zvariant::OwnedObjectPath)
-        -> zbus::Result<()>;
+    fn session_new(
+        &self,
+        session_id: &str,
+        object_path: zvariant::OwnedObjectPath,
+    ) -> zbus::Result<()>;
 
     /// SessionRemoved signal
     #[dbus_proxy(signal)]
@@ -337,7 +344,7 @@ trait Manager {
     #[dbus_proxy(property)]
     #[inline]
     fn enable_wall_messages(&self) -> zbus::Result<bool>;
-    
+
     #[DBusProxy(property)]
     #[inline]
     fn set_enable_wall_messages(&self, value: bool) -> zbus::Result<()>;

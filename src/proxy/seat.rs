@@ -1,16 +1,16 @@
 use std::time::Duration;
 
-use zbus::Result;
 #[cfg(feature = "azync")]
 use zbus::azync::Connection;
-#[cfg(not(feature = "azync"))]
-use zbus::Connection;
 #[cfg(feature = "azync")]
 use zbus::azync::Proxy;
 #[cfg(not(feature = "azync"))]
+use zbus::Connection;
+#[cfg(not(feature = "azync"))]
 use zbus::Proxy;
+use zbus::Result;
 
-use crate::{DEFAULT_DEST, generated::seat, types::{DbusPath}};
+use crate::{DEFAULT_DEST, generated::seat, types::{SeatPath, SessionPath}};
 
 /// Proxy wrapper for the logind `Seat` dbus interface
 ///
@@ -24,9 +24,9 @@ use crate::{DEFAULT_DEST, generated::seat, types::{DbusPath}};
 /// let manager = ManagerProxy::new(&connection).unwrap();
 /// let seats = manager.list_seats().unwrap();
 /// let seat = SeatProxy::new(&connection, &seats[0]).unwrap();
-/// 
+///
 /// assert!(seat.get_active_session().is_ok());
-/// 
+///
 /// assert!(manager.can_suspend().is_ok());
 /// ```
 pub struct SeatProxy<'a>(seat::SeatProxy<'a>);
@@ -59,8 +59,12 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for SeatProxy<'a> {
 
 impl<'a> SeatProxy<'a> {
     #[inline]
-    pub fn new(connection: &Connection, path: &'a DbusPath) -> Result<Self> {
-        Ok(Self(seat::SeatProxy::new_for(&connection, DEFAULT_DEST, path.path())?))
+    pub fn new(connection: &Connection, path: &'a SeatPath) -> Result<Self> {
+        Ok(Self(seat::SeatProxy::new_for(
+            &connection,
+            DEFAULT_DEST,
+            path.path(),
+        )?))
     }
 
     /// Brings the session with the specified ID into the foreground if the
@@ -70,7 +74,7 @@ impl<'a> SeatProxy<'a> {
         self.0.activate_session(session_id)
     }
 
-    /// Switches to the session on the virtual terminal 
+    /// Switches to the session on the virtual terminal
     #[inline]
     pub fn switch_to(&self, vtnr: u32) -> zbus::Result<()> {
         self.0.switch_to(vtnr)
@@ -100,7 +104,7 @@ impl<'a> SeatProxy<'a> {
 
     /// Property: currently active session if there is one
     #[inline]
-    pub fn get_active_session(&self) -> zbus::Result<DbusPath> {
+    pub fn get_active_session(&self) -> zbus::Result<SessionPath> {
         self.0.active_session()
     }
 
@@ -124,20 +128,20 @@ impl<'a> SeatProxy<'a> {
 
     /// Property: Is the seat idle
     #[inline]
-    pub  fn get_idle_hint(&self) -> zbus::Result<bool> {
+    pub fn get_idle_hint(&self) -> zbus::Result<bool> {
         self.0.idle_hint()
     }
 
     /// Property: timestamp of the last change of the idle hint boolean (realtime)
     #[inline]
-    pub  fn get_idle_since_hint(&self) -> zbus::Result<Duration> {
-        self.0.idle_since_hint().map(|t| Duration::from_micros(t))
+    pub fn get_idle_since_hint(&self) -> zbus::Result<Duration> {
+        self.0.idle_since_hint().map(Duration::from_micros)
     }
 
     /// Property: timestamp of the last change of the idle hint boolean (walltime)
     #[inline]
-    pub  fn get_idle_since_hint_monotonic(&self) -> zbus::Result<Duration> {
-        self.0.idle_since_hint().map(|t| Duration::from_micros(t))
+    pub fn get_idle_since_hint_monotonic(&self) -> zbus::Result<Duration> {
+        self.0.idle_since_hint().map(Duration::from_micros)
     }
 
     // /// Property: sessions on this seat
