@@ -110,7 +110,7 @@ impl From<&str> for SessionClass {
     }
 }
 
-#[derive(Debug, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
 pub struct Device {
     file_descriptor: std::os::unix::io::RawFd,
     inactive: bool,
@@ -131,7 +131,7 @@ pub trait IntoSessionPath {
     fn into_path_ref(&self) -> &OwnedObjectPath;
 }
 
-#[derive(Debug, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
 pub struct SessionInfo {
     /// Session ID
     sid: String,
@@ -331,7 +331,7 @@ pub trait IntoUserPath {
     fn into_path_ref(&self) -> &OwnedObjectPath;
 }
 
-#[derive(Debug, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct UserInfo {
     uid: u32,
     name: String,
@@ -363,7 +363,7 @@ impl IntoUserPath for UserInfo {
     }
 }
 
-#[derive(Debug, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct UserPath {
     uid: u32,
     /// Name of session user
