@@ -8,7 +8,7 @@ use zbus::azync::Proxy;
 use zbus::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Proxy;
-use zbus::{Result, SignalHandlerId};
+use zbus::{Result};
 use zvariant::OwnedObjectPath;
 
 use crate::{generated::manager, types::{IsSupported, ScheduledShutdown, SeatPath, SessionInfo, ShutdownType, UserInfo}};
@@ -568,7 +568,7 @@ impl<'a> ManagerProxy<'a> {
     ///////////////////////////////////////////////////////////////////////////
 
     #[inline]
-    pub fn connect_prepare_for_shutdown<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_prepare_for_shutdown<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -576,7 +576,7 @@ impl<'a> ManagerProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_prepare_for_sleep<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_prepare_for_sleep<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -584,7 +584,7 @@ impl<'a> ManagerProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_new_seat<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_new_seat<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -592,7 +592,7 @@ impl<'a> ManagerProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_seat_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_seat_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -600,7 +600,7 @@ impl<'a> ManagerProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_new_session<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_new_session<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -608,7 +608,7 @@ impl<'a> ManagerProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_session_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_session_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -616,7 +616,7 @@ impl<'a> ManagerProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_new_user<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_new_user<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -624,7 +624,7 @@ impl<'a> ManagerProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_user_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_user_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {

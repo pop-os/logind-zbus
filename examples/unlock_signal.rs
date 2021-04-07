@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     let mut signals = SignalReceiver::new(connection);
-    signals.receive_for(session.get_proxy())?;
+    signals.receive_for(session.get_proxy());
 
     loop {
         signals.next_signal()?;
