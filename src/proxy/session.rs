@@ -8,7 +8,7 @@ use zbus::azync::Proxy;
 use zbus::Connection;
 #[cfg(not(feature = "azync"))]
 use zbus::Proxy;
-use zbus::{Result, SignalHandlerId};
+use zbus::{Result};
 
 use crate::{DEFAULT_DEST, generated::session, types::{Device, IntoSessionPath, SeatPath, SessionClass, SessionState, SessionType, UserPath}};
 
@@ -87,7 +87,7 @@ impl<'a> SessionProxy<'a> {
     ///
     /// This method returns Ok(true) if a handler with the id handler_id is found
     /// and removed; Ok(false) otherwise.
-    pub fn disconnect_signal(&self, handler_id: SignalHandlerId) -> zbus::fdo::Result<bool> {
+    pub fn disconnect_signal(&self, handler_id: &'static str) -> zbus::fdo::Result<bool> {
         self.0.disconnect_signal(handler_id)
     }
 
@@ -352,7 +352,7 @@ impl<'a> SessionProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_lock<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_lock<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -360,7 +360,7 @@ impl<'a> SessionProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_pause_device<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_pause_device<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(u32, u32, &str) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -368,7 +368,7 @@ impl<'a> SessionProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_resume_device<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_resume_device<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut(u32, u32, i32) -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -376,7 +376,7 @@ impl<'a> SessionProxy<'a> {
     }
 
     #[inline]
-    pub fn connect_unlock<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
+    pub fn connect_unlock<C>(&self, callback: C) -> zbus::fdo::Result<()>
     where
         C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static,
     {
@@ -440,7 +440,7 @@ mod tests {
         session.connect_lock(|| Ok(())).unwrap();
 
         let mut sig_recv = SignalReceiver::new(connection);
-        sig_recv.receive_for(session.get_proxy()).unwrap();
+        sig_recv.receive_for(session.get_proxy());
         //sig_recv.next().unwrap();
     }
 
