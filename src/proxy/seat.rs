@@ -10,6 +10,7 @@ use zbus::Connection;
 use zbus::Proxy;
 use zbus::Result;
 
+use crate::types::DbusPath;
 use crate::{
     generated::seat,
     types::{SeatPath, SessionPath},
@@ -129,7 +130,7 @@ impl<'a> SeatProxy<'a> {
     /// Property: the session is suitable for text logins
     #[inline]
     pub fn get_can_tty(&self) -> zbus::Result<bool> {
-        self.0.can_tty()
+        self.0.can_TTY()
     }
 
     /// Property: seat ID
@@ -156,11 +157,16 @@ impl<'a> SeatProxy<'a> {
         self.0.idle_since_hint().map(Duration::from_micros)
     }
 
-    // /// Property: sessions on this seat
-    // #[inline]
-    // pub fn get_sessions(&self) -> zbus::Result<Vec<DbusPath>> {
-    //     self.0.sessions()
-    // }
+    /// Property: sessions on this seat
+    #[inline]
+    pub fn get_sessions(&self) -> zbus::Result<Vec<DbusPath>> {
+        let tmp = self.0.sessions()?;
+        let mut sessions = Vec::with_capacity(tmp.len());
+        for t in tmp {
+            sessions.push(DbusPath::new(t.0, t.1))
+        }
+        Ok(sessions)
+    }
 }
 
 #[cfg(test)]
@@ -188,11 +194,11 @@ mod tests {
 
         assert!(seat.get_active_session().is_ok());
         assert!(seat.get_can_graphical().is_ok());
-        //assert!(seat.get_can_tty().is_ok());
+        assert!(seat.get_can_tty().is_ok());
         assert!(seat.get_id().is_ok());
         assert!(seat.get_idle_hint().is_ok());
         assert!(seat.get_idle_since_hint().is_ok());
         assert!(seat.get_idle_since_hint_monotonic().is_ok());
-        //assert!(seat.get_sessions().is_ok());
+        assert!(seat.get_sessions().is_ok());
     }
 }

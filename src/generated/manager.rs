@@ -95,22 +95,10 @@ trait Manager {
 
     // /// CreateSession method
     // #[inline]
-    // fn create_session(
-    //     &self,
-    //     uid: u32,
-    //     pid: u32,
-    //     service: &str,
-    //     r#type: &str,
-    //     class: &str,
-    //     desktop: &str,
-    //     seat_id: &str,
-    //     vtnr: u32,
-    //     tty: &str,
-    //     display: &str,
-    //     remote: bool,
-    //     remote_user: &str,
-    //     remote_host: &str,
-    //     properties: &[(&str, zvariant::Value)],
+    // fn create_session<'a>(
+    //     &'a self,
+    //     session: SessionCreate,
+    //     properties: &[(&str, zvariant::Value<'a>)],
     // ) -> zbus::Result<(
     //     String,
     //     zvariant::OwnedObjectPath,
@@ -523,7 +511,8 @@ trait Manager {
     #[dbus_proxy(property)]
     #[inline]
     fn wall_message(&self) -> zbus::Result<String>;
+
     // #[DBusProxy(property)]
     // #[inline]
-    //fn set_wall_message(&self, value: &str) -> zbus::Result<()>;
+    // fn set_wall_message(&self, value: &str) -> zbus::Result<()>;
 }

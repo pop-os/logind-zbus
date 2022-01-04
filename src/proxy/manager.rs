@@ -236,6 +236,24 @@ impl<'a> ManagerProxy<'a> {
         self.0.hybrid_sleep(interactive)
     }
 
+    // #[inline]
+    // pub fn create_session(
+    //     &'a self,
+    //     session: SessionCreate,
+    //     properties: &[(&str, zvariant::Value<'a>)],
+    // ) -> zbus::Result<(
+    //     String,
+    //     zvariant::OwnedObjectPath,
+    //     String,
+    //     std::os::unix::io::RawFd,
+    //     u32,
+    //     String,
+    //     u32,
+    //     bool,
+    // )> {
+    //     self.0.create_session(session, properties)
+    // }
+
     #[inline]
     pub fn kill_session(
         &self,

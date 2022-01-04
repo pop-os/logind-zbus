@@ -131,6 +131,24 @@ pub trait IntoSessionPath {
     fn into_path_ref(&self) -> &OwnedObjectPath;
 }
 
+// #[derive(Debug, PartialEq, Serialize, Deserialize)]
+// pub struct SessionCreate {
+//     uid: u32,
+//     pid: u32,
+//     service: String,
+//     r#type: SessionType,
+//     class: SessionClass,
+//     desktop: String,
+//     seat_id: String,
+//     vtnr: u32,
+//     tty: String,
+//     display: String,
+//     remote: bool,
+//     remote_user: String,
+//     remote_host: String,
+//     //properties: Vec<(String, zvariant::Value<'a>)>,
+// }
+
 #[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
 pub struct SessionInfo {
     /// Session ID
@@ -276,6 +294,13 @@ pub struct DbusPath {
 }
 
 impl DbusPath {
+    pub(crate) fn new(id: String, path: OwnedObjectPath) -> Self {
+        Self {
+            id,
+            path
+        }
+    }
+
     pub fn id(&self) -> &str {
         &self.id
     }
