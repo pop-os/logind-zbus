@@ -19,6 +19,8 @@
 //!
 //! …consequently `zbus-xmlgen` did not generate code for the above interfaces.
 
+#![allow(non_snake_case)]
+
 use zbus::dbus_proxy;
 
 use crate::types::{Device, SeatPath, UserPath};
@@ -207,7 +209,7 @@ trait Session {
     /// TTY property
     #[dbus_proxy(property)]
     #[inline]
-    fn tty(&self) -> zbus::Result<String>;
+    fn TTY(&self) -> zbus::Result<String>;
 
     /// Timestamp property
     #[dbus_proxy(property)]
@@ -232,5 +234,5 @@ trait Session {
     /// VTNr property
     #[dbus_proxy(property)]
     #[inline]
-    fn vtnr(&self) -> zbus::Result<u32>;
+    fn VTNr(&self) -> zbus::Result<u32>;
 }

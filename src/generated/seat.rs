@@ -19,6 +19,8 @@
 //!
 //! …consequently `zbus-xmlgen` did not generate code for the above interfaces.
 
+#![allow(non_snake_case)]
+
 use zbus::dbus_proxy;
 
 use crate::types::SessionPath;
@@ -61,7 +63,7 @@ trait Seat {
     /// CanTTY property
     #[dbus_proxy(property)]
     #[inline]
-    fn can_tty(&self) -> zbus::Result<bool>;
+    fn can_TTY(&self) -> zbus::Result<bool>;
 
     /// Id property
     #[dbus_proxy(property)]
@@ -83,8 +85,8 @@ trait Seat {
     #[inline]
     fn idle_since_hint_monotonic(&self) -> zbus::Result<u64>;
 
-    // /// Sessions property
-    // #[dbus_proxy(property)]
-    // #[inline]
-    // fn sessions(&self) -> zbus::Result<Vec<DbusPath>>;
+    /// Sessions property
+    #[dbus_proxy(property)]
+    #[inline]
+    fn sessions(&self) -> zbus::Result<Vec<(String, zbus::zvariant::OwnedObjectPath)>>;
 }

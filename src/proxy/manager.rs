@@ -1,26 +1,28 @@
 use std::time::Duration;
 
-#[cfg(feature = "azync")]
-use zbus::azync::Connection;
-#[cfg(feature = "azync")]
-use zbus::azync::Proxy;
-#[cfg(not(feature = "azync"))]
+#[cfg(not(feature = "non_blocking"))]
+use zbus::blocking::Connection;
+#[cfg(not(feature = "non_blocking"))]
+use zbus::blocking::Proxy;
+#[cfg(feature = "non_blocking")]
 use zbus::Connection;
-#[cfg(not(feature = "azync"))]
+#[cfg(feature = "non_blocking")]
 use zbus::Proxy;
-use zbus::{Result};
-use zvariant::OwnedObjectPath;
+use zbus::Result;
 
-use crate::{generated::manager, types::{IsSupported, ScheduledShutdown, SeatPath, SessionInfo, ShutdownType, UserInfo}};
+use crate::{
+    generated::manager,
+    types::{IsSupported, ScheduledShutdown, SeatPath, SessionInfo, ShutdownType, UserInfo},
+};
 
 /// Proxy wrapper for the logind `Manager` dbus interface
 ///
 /// # Example
 /// ```rust
 /// use logind_zbus::ManagerProxy;
-/// use zbus::Connection;
+/// use zbus::blocking::Connection;
 ///
-/// let connection = Connection::new_system().unwrap();
+/// let connection = Connection::system().unwrap();
 /// let manager = ManagerProxy::new(&connection).unwrap();
 ///
 /// assert!(manager.can_suspend().is_ok());
@@ -33,6 +35,10 @@ use crate::{generated::manager, types::{IsSupported, ScheduledShutdown, SeatPath
 /// ```ignore
 /// *<ManagerProxy>.connect_<function name>()
 /// ```
+#[cfg(not(feature = "non_blocking"))]
+pub struct ManagerProxy<'a>(manager::ManagerProxyBlocking<'a>);
+
+#[cfg(feature = "non_blocking")]
 pub struct ManagerProxy<'a>(manager::ManagerProxy<'a>);
 
 impl<'a> std::ops::Deref for ManagerProxy<'a> {
@@ -64,7 +70,11 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for ManagerProxy<'a> {
 impl<'a> ManagerProxy<'a> {
     #[inline]
     pub fn new(connection: &Connection) -> Result<Self> {
-        Ok(Self(manager::ManagerProxy::new(&connection)?))
+        #[cfg(feature = "non_blocking")]
+        return Ok(Self(manager::ManagerProxy::new(&connection)?));
+
+        #[cfg(not(feature = "non_blocking"))]
+        return Ok(Self(manager::ManagerProxyBlocking::new(&connection)?));
     }
 
     /// Brings the session with the specified ID into the foreground
@@ -187,7 +197,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_session_by_pid(&self, pid: u32) -> zbus::Result<zvariant::OwnedObjectPath> {
-        self.0.get_session_by_pid(pid)
+        self.0.get_session_by_PID(pid)
     }
 
     #[inline]
@@ -197,7 +207,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_user_by_pid(&self, pid: u32) -> zbus::Result<zvariant::OwnedObjectPath> {
-        self.0.get_user_by_pid(pid)
+        self.0.get_user_by_PID(pid)
     }
 
     #[inline]
@@ -225,6 +235,24 @@ impl<'a> ManagerProxy<'a> {
     pub fn hybrid_sleep(&self, interactive: bool) -> zbus::Result<()> {
         self.0.hybrid_sleep(interactive)
     }
+
+    // #[inline]
+    // pub fn create_session(
+    //     &'a self,
+    //     session: SessionCreate,
+    //     properties: &[(&str, zvariant::Value<'a>)],
+    // ) -> zbus::Result<(
+    //     String,
+    //     zvariant::OwnedObjectPath,
+    //     String,
+    //     std::os::unix::io::RawFd,
+    //     u32,
+    //     String,
+    //     u32,
+    //     bool,
+    // )> {
+    //     self.0.create_session(session, properties)
+    // }
 
     #[inline]
     pub fn kill_session(
@@ -420,7 +448,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_holdoff_timeout_usec(&self) -> zbus::Result<Duration> {
-        self.0.holdoff_timeout_usec().map(Duration::from_micros)
+        self.0.holdoff_timeout_USec().map(Duration::from_micros)
     }
 
     #[inline]
@@ -430,7 +458,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_idle_action_usec(&self) -> zbus::Result<Duration> {
-        self.0.idle_action_usec().map(Duration::from_micros)
+        self.0.idle_action_USec().map(Duration::from_micros)
     }
 
     #[inline]
@@ -452,7 +480,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_inhibit_delay_max_usec(&self) -> zbus::Result<Duration> {
-        self.0.inhibit_delay_max_usec().map(Duration::from_micros)
+        self.0.inhibit_delay_max_USec().map(Duration::from_micros)
     }
 
     #[inline]
@@ -482,17 +510,17 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_nauto_vts(&self) -> zbus::Result<u32> {
-        self.0.nauto_vts()
+        self.0.NAuto_VTs()
     }
 
     #[inline]
     pub fn get_ncurrent_inhibitors(&self) -> zbus::Result<u64> {
-        self.0.ncurrent_inhibitors()
+        self.0.NCurrent_inhibitors()
     }
 
     #[inline]
     pub fn get_ncurrent_sessions(&self) -> zbus::Result<u64> {
-        self.0.ncurrent_sessions()
+        self.0.NCurrent_sessions()
     }
 
     #[inline]
@@ -532,7 +560,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_remove_ipc(&self) -> zbus::Result<bool> {
-        self.0.remove_ipc()
+        self.0.remove_IPC()
     }
 
     #[inline]
@@ -557,7 +585,7 @@ impl<'a> ManagerProxy<'a> {
 
     #[inline]
     pub fn get_user_stop_delay_usec(&self) -> zbus::Result<Duration> {
-        self.0.user_stop_delay_usec().map(Duration::from_micros)
+        self.0.user_stop_delay_USec().map(Duration::from_micros)
     }
 
     #[inline]
@@ -567,79 +595,56 @@ impl<'a> ManagerProxy<'a> {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    #[inline]
-    pub fn connect_prepare_for_shutdown<C>(&self, callback: C) -> zbus::fdo::Result<()>
-    where
-        C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_prepare_for_shutdown(callback)
-    }
-
-    #[inline]
-    pub fn connect_prepare_for_sleep<C>(&self, callback: C) -> zbus::fdo::Result<()>
-    where
-        C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_prepare_for_sleep(callback)
-    }
-
-    #[inline]
-    pub fn connect_new_seat<C>(&self, callback: C) -> zbus::fdo::Result<()>
-    where
-        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_seat_new(callback)
-    }
-
-    #[inline]
-    pub fn connect_seat_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
-    where
-        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_seat_removed(callback)
-    }
-
-    #[inline]
-    pub fn connect_new_session<C>(&self, callback: C) -> zbus::fdo::Result<()>
-    where
-        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_session_new(callback)
-    }
-
-    #[inline]
-    pub fn connect_session_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
-    where
-        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_session_removed(callback)
-    }
-
-    #[inline]
-    pub fn connect_new_user<C>(&self, callback: C) -> zbus::fdo::Result<()>
-    where
-        C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_user_new(callback)
-    }
-
-    #[inline]
-    pub fn connect_user_removed<C>(&self, callback: C) -> zbus::fdo::Result<()>
-    where
-        C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_user_removed(callback)
-    }
+    receive_signal_name!(
+        receive_prepare_for_shutdown,
+        manager::PrepareForShutdownStream,
+        manager::PrepareForShutdownIterator
+    );
+    receive_signal_name!(
+        receive_prepare_for_sleep,
+        manager::PrepareForSleepStream,
+        manager::PrepareForSleepIterator
+    );
+    receive_signal_name!(
+        receive_seat_new,
+        manager::SeatNewStream,
+        manager::SeatNewIterator
+    );
+    receive_signal_name!(
+        receive_seat_removed,
+        manager::SeatRemovedStream,
+        manager::SeatRemovedIterator
+    );
+    receive_signal_name!(
+        receive_session_new,
+        manager::SessionNewStream,
+        manager::SessionNewIterator
+    );
+    receive_signal_name!(
+        receive_session_removed,
+        manager::SessionRemovedStream,
+        manager::SessionRemovedIterator
+    );
+    receive_signal_name!(
+        receive_user_new,
+        manager::UserNewStream,
+        manager::UserNewIterator
+    );
+    receive_signal_name!(
+        receive_user_removed,
+        manager::UserRemovedStream,
+        manager::UserRemovedIterator
+    );
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ManagerProxy;
-    use zbus::Connection;
+    use zbus::blocking::Connection;
 
     #[test]
     fn timestamps() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
 
         assert!(manager.can_suspend().is_ok());
@@ -647,7 +652,7 @@ mod tests {
 
     #[test]
     fn properties() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
 
         assert!(manager.get_block_inhibited().is_ok());
@@ -660,22 +665,21 @@ mod tests {
         assert!(manager.get_handle_lid_switch_external_power().is_ok());
         assert!(manager.get_handle_power_key().is_ok());
         assert!(manager.get_handle_suspend_key().is_ok());
-        // UnknownProperty
-        //assert!(manager.get_holdoff_timeout_usec().is_ok());
+        assert!(manager.get_holdoff_timeout_usec().is_ok());
         assert!(manager.get_idle_action().is_ok());
-        //assert!(manager.get_idle_action_usec().is_ok());
+        assert!(manager.get_idle_action_usec().is_ok());
         assert!(manager.get_idle_hint().is_ok());
         assert!(manager.get_idle_since_hint().is_ok());
         assert!(manager.get_idle_since_hint_monotonic().is_ok());
-        //assert!(manager.get_inhibit_delay_max_usec().is_ok());
+        assert!(manager.get_inhibit_delay_max_usec().is_ok());
         assert!(manager.get_inhibitors_max().is_ok());
         assert!(manager.get_kill_exclude_users().is_ok());
         assert!(manager.get_kill_only_users().is_ok());
         assert!(manager.get_kill_user_processes().is_ok());
         assert!(manager.get_lid_closed().is_ok());
-        //assert!(manager.get_nauto_vts().is_ok());
-        //assert!(manager.get_ncurrent_inhibitors().is_ok());
-        //assert!(manager.get_ncurrent_sessions().is_ok());
+        assert!(manager.get_nauto_vts().is_ok());
+        assert!(manager.get_ncurrent_inhibitors().is_ok());
+        assert!(manager.get_ncurrent_sessions().is_ok());
         assert!(manager.get_on_external_power().is_ok());
         assert!(manager.get_preparing_for_shutdown().is_ok());
         assert!(manager.get_preparing_for_sleep().is_ok());
@@ -683,17 +687,23 @@ mod tests {
         assert!(manager.get_reboot_to_boot_loader_entry().is_ok());
         assert!(manager.get_reboot_to_boot_loader_menu().is_ok());
         assert!(manager.get_reboot_to_firmware_setup().is_ok());
-        //assert!(manager.get_remove_ipc().is_ok());
+        assert!(manager.get_remove_ipc().is_ok());
         assert!(manager.get_runtime_directory_inodes_max().is_ok());
         assert!(manager.get_runtime_directory_size().is_ok());
         assert!(manager.get_scheduled_shutdown().is_ok());
-        //assert!(manager.get_seat().is_ok());
-        //assert!(manager.get_session().is_ok());
-        //assert!(manager.get_session_by_pid().is_ok());
+        assert!(manager.get_seat("seat0").is_ok());
+
+        // Requires a valid session ID
+        // assert!(manager.get_session("c4").is_ok());
+        // Requires knowing a process ID owned by a session
+        // assert!(manager.get_session_by_pid(5455).is_ok());
+
         assert!(manager.get_sessions_max().is_ok());
-        //assert!(manager.get_user().is_ok());
-        //assert!(manager.get_user_by_pid().is_ok());
-        //assert!(manager.get_user_stop_delay_usec().is_ok());
+        // Requires a valid logged-in user ID
+        // assert!(manager.get_user(1000).is_ok());
+        // Requires knowing a process ID
+        // assert!(manager.get_user_by_pid(25813).is_ok());
+        assert!(manager.get_user_stop_delay_usec().is_ok());
         assert!(manager.get_wall_message().is_ok());
     }
 }

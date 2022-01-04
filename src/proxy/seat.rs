@@ -1,16 +1,21 @@
 use std::time::Duration;
 
-#[cfg(feature = "azync")]
-use zbus::azync::Connection;
-#[cfg(feature = "azync")]
-use zbus::azync::Proxy;
-#[cfg(not(feature = "azync"))]
+#[cfg(not(feature = "non_blocking"))]
+use zbus::blocking::Connection;
+#[cfg(not(feature = "non_blocking"))]
+use zbus::blocking::Proxy;
+#[cfg(feature = "non_blocking")]
 use zbus::Connection;
-#[cfg(not(feature = "azync"))]
+#[cfg(feature = "non_blocking")]
 use zbus::Proxy;
 use zbus::Result;
 
-use crate::{DEFAULT_DEST, generated::seat, types::{SeatPath, SessionPath}};
+use crate::types::DbusPath;
+use crate::{
+    generated::seat,
+    types::{SeatPath, SessionPath},
+    DEFAULT_DEST,
+};
 
 /// Proxy wrapper for the logind `Seat` dbus interface
 ///
@@ -18,9 +23,9 @@ use crate::{DEFAULT_DEST, generated::seat, types::{SeatPath, SessionPath}};
 /// ```rust
 /// use logind_zbus::ManagerProxy;
 /// use logind_zbus::SeatProxy;
-/// use zbus::Connection;
+/// use zbus::blocking::Connection;
 ///
-/// let connection = Connection::new_system().unwrap();
+/// let connection = Connection::system().unwrap();
 /// let manager = ManagerProxy::new(&connection).unwrap();
 /// let seats = manager.list_seats().unwrap();
 /// let seat = SeatProxy::new(&connection, &seats[0]).unwrap();
@@ -29,6 +34,10 @@ use crate::{DEFAULT_DEST, generated::seat, types::{SeatPath, SessionPath}};
 ///
 /// assert!(manager.can_suspend().is_ok());
 /// ```
+#[cfg(not(feature = "non_blocking"))]
+pub struct SeatProxy<'a>(seat::SeatProxyBlocking<'a>);
+
+#[cfg(feature = "non_blocking")]
 pub struct SeatProxy<'a>(seat::SeatProxy<'a>);
 
 impl<'a> std::ops::Deref for SeatProxy<'a> {
@@ -60,11 +69,15 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for SeatProxy<'a> {
 impl<'a> SeatProxy<'a> {
     #[inline]
     pub fn new(connection: &Connection, path: &'a SeatPath) -> Result<Self> {
-        Ok(Self(seat::SeatProxy::new_for(
-            &connection,
-            DEFAULT_DEST,
-            path.path(),
-        )?))
+        #[cfg(feature = "non_blocking")]
+        let s = seat::SeatProxy::builder(&connection);
+
+        #[cfg(not(feature = "non_blocking"))]
+        let s = seat::SeatProxyBlocking::builder(&connection);
+
+        Ok(Self(
+            s.destination(DEFAULT_DEST)?.path(path.path())?.build()?,
+        ))
     }
 
     /// Brings the session with the specified ID into the foreground if the
@@ -117,7 +130,7 @@ impl<'a> SeatProxy<'a> {
     /// Property: the session is suitable for text logins
     #[inline]
     pub fn get_can_tty(&self) -> zbus::Result<bool> {
-        self.0.can_tty()
+        self.0.can_TTY()
     }
 
     /// Property: seat ID
@@ -144,22 +157,27 @@ impl<'a> SeatProxy<'a> {
         self.0.idle_since_hint().map(Duration::from_micros)
     }
 
-    // /// Property: sessions on this seat
-    // #[inline]
-    // pub fn get_sessions(&self) -> zbus::Result<Vec<DbusPath>> {
-    //     self.0.sessions()
-    // }
+    /// Property: sessions on this seat
+    #[inline]
+    pub fn get_sessions(&self) -> zbus::Result<Vec<DbusPath>> {
+        let tmp = self.0.sessions()?;
+        let mut sessions = Vec::with_capacity(tmp.len());
+        for t in tmp {
+            sessions.push(DbusPath::new(t.0, t.1))
+        }
+        Ok(sessions)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ManagerProxy;
     use crate::SeatProxy;
-    use zbus::Connection;
+    use zbus::blocking::Connection;
 
     #[test]
     fn timestamps() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let seats = manager.list_seats().unwrap();
         let seat = SeatProxy::new(&connection, &seats[0]).unwrap();
@@ -169,18 +187,18 @@ mod tests {
 
     #[test]
     fn properties() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let seats = manager.list_seats().unwrap();
         let seat = SeatProxy::new(&connection, &seats[0]).unwrap();
 
         assert!(seat.get_active_session().is_ok());
         assert!(seat.get_can_graphical().is_ok());
-        //assert!(seat.get_can_tty().is_ok());
+        assert!(seat.get_can_tty().is_ok());
         assert!(seat.get_id().is_ok());
         assert!(seat.get_idle_hint().is_ok());
         assert!(seat.get_idle_since_hint().is_ok());
         assert!(seat.get_idle_since_hint_monotonic().is_ok());
-        //assert!(seat.get_sessions().is_ok());
+        assert!(seat.get_sessions().is_ok());
     }
 }

@@ -5,9 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+# [2.0.0]
+### Changed
+- Upgrade crate to use zbus 2.0.0
+- Enable majority of missing logind properties
+
 # [0.7.0] - 2021-04-7
 ### Changed
 - Revert to zbus 1.9.1 stable
+
+# [0.6.1] - 2021-03-15
+### Changed
+- Derive PartialEq on more structs
 
 # [0.6.1] - 2021-03-15
 ### Changed

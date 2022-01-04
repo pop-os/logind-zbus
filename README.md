@@ -10,8 +10,8 @@ the associated issues are solved.
 
 ## Features
 
-A single feature flag is available: `azync`, which switches out `zbus::Connection`
-for `zbus::azync::Connection` allowing for async rust.
+A single feature flag is available: `non_blocking`, which switches out `zbus::blocking::Connection`
+for `zbus::Connection` allowing for async rust.
 
 ---
 

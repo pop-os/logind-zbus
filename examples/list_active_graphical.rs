@@ -1,9 +1,12 @@
-use logind_zbus::{ManagerProxy, SessionProxy, types::{SessionClass, SessionType}};
-use zbus::Connection;
+use logind_zbus::{
+    types::{SessionClass, SessionType},
+    ManagerProxy, SessionProxy,
+};
+use zbus::blocking::Connection;
 
 // Type, Class, Active
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let connection = Connection::new_system()?;
+    let connection = Connection::system()?;
     let manager = ManagerProxy::new(&connection)?;
     let sessions = manager.list_sessions()?;
 

@@ -1,9 +1,9 @@
 [package]
 name = "logind-zbus"
-version = "0.7.1"
+version = "2.0.0"
 license = "MPL-2.0"
 authors = ["Luke D Jones <luke@ljones.dev>"]
-edition = "2018"
+edition = "2021"
 readme = "README.md"
 repository = "https://gitlab.com/flukejones/logind-zbus"
 homepage = "https://gitlab.com/flukejones/logind-zbus"
@@ -14,12 +14,12 @@ categories = ["os::unix-apis"]
 
 [features]
 default = []
-azync = []
+non_blocking = []
 
 [dependencies]
 serde = "^1.0"
 serde_json = "^1.0"
-zbus = "^1.9.1"
-zbus_macros = "^1.9.1"
-zvariant = "^2.6"
-zvariant_derive = "^2.6"
+zbus = "^2.0.0"
+zbus_macros = "^2.0.0"
+zvariant = "^3.0.0"
+zvariant_derive = "^3.0.0"
