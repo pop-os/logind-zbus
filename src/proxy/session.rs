@@ -1,12 +1,12 @@
 use std::time::Duration;
 
-#[cfg(not(feature = "azync"))]
+#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Connection;
-#[cfg(not(feature = "azync"))]
+#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Proxy;
-#[cfg(feature = "azync")]
+#[cfg(feature = "non_blocking")]
 use zbus::Connection;
-#[cfg(feature = "azync")]
+#[cfg(feature = "non_blocking")]
 use zbus::Proxy;
 use zbus::Result;
 
@@ -45,10 +45,10 @@ use crate::{
 /// ```ignore
 /// *<SessionProxy>.connect_<function name>()
 /// ```
-#[cfg(not(feature = "azync"))]
+#[cfg(not(feature = "non_blocking"))]
 pub struct SessionProxy<'a>(session::SessionProxyBlocking<'a>);
 
-#[cfg(feature = "azync")]
+#[cfg(feature = "non_blocking")]
 pub struct SessionProxy<'a>(session::SessionProxy<'a>);
 
 impl<'a> std::ops::Deref for SessionProxy<'a> {
@@ -82,10 +82,10 @@ impl<'a> SessionProxy<'a> {
     where
         S: IntoSessionPath,
     {
-        #[cfg(feature = "azync")]
+        #[cfg(feature = "non_blocking")]
         let s = session::SessionProxy::builder(&connection);
 
-        #[cfg(not(feature = "azync"))]
+        #[cfg(not(feature = "non_blocking"))]
         let s = session::SessionProxyBlocking::builder(&connection);
 
         Ok(Self(
@@ -97,14 +97,14 @@ impl<'a> SessionProxy<'a> {
 
     /// Borrow the underlying `SessionProxy` for use with zbus directly
     #[inline]
-    #[cfg(feature = "azync")]
+    #[cfg(feature = "non_blocking")]
     pub fn get_proxy(&self) -> &session::SessionProxy {
         &self.0
     }
 
     /// Borrow the underlying `SessionProxy` for use with zbus directly
     #[inline]
-    #[cfg(not(feature = "azync"))]
+    #[cfg(not(feature = "non_blocking"))]
     pub fn get_proxy(&self) -> &session::SessionProxyBlocking {
         &self.0
     }
@@ -331,7 +331,7 @@ impl<'a> SessionProxy<'a> {
     /// If not this None.
     #[inline]
     pub fn get_tty(&self) -> zbus::Result<Option<String>> {
-        self.0.tty().map(|s| {
+        self.0.TTY().map(|s| {
             if s.is_empty() {
                 return Some(s);
             }
@@ -366,7 +366,7 @@ impl<'a> SessionProxy<'a> {
     /// Property: Virtual terminal number of the session if there is any, 0 otherwise.
     #[inline]
     pub fn get_vtnr(&self) -> zbus::Result<u32> {
-        self.0.vtnr()
+        self.0.VTNr()
     }
 
     receive_signal_name!(receive_lock, session::LockStream, session::LockIterator);
@@ -461,11 +461,9 @@ mod tests {
         assert!(session.get_state().is_ok());
         assert!(session.get_timestamp().is_ok());
         assert!(session.get_timestamp_monotonic().is_ok());
-        // Special case
-        //assert!(session_proxy.get_tty().is_ok());
+        assert!(session.get_tty().is_ok());
         assert!(session.get_type().is_ok());
         assert!(session.get_user().is_ok());
-        // Special case
-        //assert!(session_proxy.get_vtnr().is_ok());
+        assert!(session.get_vtnr().is_ok());
     }
 }

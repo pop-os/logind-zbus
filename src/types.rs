@@ -295,10 +295,7 @@ pub struct DbusPath {
 
 impl DbusPath {
     pub(crate) fn new(id: String, path: OwnedObjectPath) -> Self {
-        Self {
-            id,
-            path
-        }
+        Self { id, path }
     }
 
     pub fn id(&self) -> &str {

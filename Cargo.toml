@@ -14,7 +14,7 @@ categories = ["os::unix-apis"]
 
 [features]
 default = []
-azync = []
+non_blocking = []
 
 [dependencies]
 serde = "^1.0"

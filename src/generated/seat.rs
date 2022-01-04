@@ -19,9 +19,11 @@
 //!
 //! …consequently `zbus-xmlgen` did not generate code for the above interfaces.
 
+#![allow(non_snake_case)]
+
 use zbus::dbus_proxy;
 
-use crate::types::{SessionPath};
+use crate::types::SessionPath;
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Seat",

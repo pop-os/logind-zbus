@@ -19,6 +19,8 @@
 //!
 //! …consequently `zbus-xmlgen` did not generate code for the above interfaces.
 
+#![allow(non_snake_case)]
+
 use zbus::dbus_proxy;
 
 use crate::types::DbusPath;
@@ -44,7 +46,7 @@ trait User {
     /// GID property
     #[dbus_proxy(property)]
     #[inline]
-    fn gid(&self) -> zbus::Result<u32>;
+    fn GID(&self) -> zbus::Result<u32>;
 
     /// IdleHint property
     #[dbus_proxy(property)]
@@ -81,10 +83,10 @@ trait User {
     #[inline]
     fn service(&self) -> zbus::Result<String>;
 
-    // /// Sessions property
-    // #[dbus_proxy(property)]
-    // #[inline]
-    // fn sessions(&self) -> zbus::Result<Vec<DbusPath>>;
+    /// Sessions property
+    #[dbus_proxy(property)]
+    #[inline]
+    fn sessions(&self) -> zbus::Result<Vec<(String, zbus::zvariant::OwnedObjectPath)>>;
 
     /// Slice property
     #[dbus_proxy(property)]
@@ -109,5 +111,5 @@ trait User {
     /// UID property
     #[dbus_proxy(property)]
     #[inline]
-    fn uid(&self) -> zbus::Result<u32>;
+    fn UID(&self) -> zbus::Result<u32>;
 }

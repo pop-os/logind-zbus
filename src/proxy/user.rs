@@ -1,12 +1,12 @@
 use std::time::Duration;
 
-#[cfg(not(feature = "azync"))]
+#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Connection;
-#[cfg(not(feature = "azync"))]
+#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Proxy;
-#[cfg(feature = "azync")]
+#[cfg(feature = "non_blocking")]
 use zbus::Connection;
-#[cfg(feature = "azync")]
+#[cfg(feature = "non_blocking")]
 use zbus::Proxy;
 use zbus::Result;
 
@@ -37,10 +37,10 @@ use crate::{
 /// let time2 = user.get_timestamp_monotonic().unwrap();
 /// assert!(time2.as_secs() > 0);
 /// ```
-#[cfg(not(feature = "azync"))]
+#[cfg(not(feature = "non_blocking"))]
 pub struct UserProxy<'a>(user::UserProxyBlocking<'a>);
 
-#[cfg(feature = "azync")]
+#[cfg(feature = "non_blocking")]
 pub struct UserProxy<'a>(user::UserProxy<'a>);
 
 impl<'a> std::ops::Deref for UserProxy<'a> {
@@ -75,10 +75,10 @@ impl<'a> UserProxy<'a> {
     where
         U: IntoUserPath,
     {
-        #[cfg(feature = "azync")]
+        #[cfg(feature = "non_blocking")]
         let s = user::UserProxy::builder(&connection);
 
-        #[cfg(not(feature = "azync"))]
+        #[cfg(not(feature = "non_blocking"))]
         let s = user::UserProxyBlocking::builder(&connection);
 
         Ok(Self(
@@ -110,7 +110,7 @@ impl<'a> UserProxy<'a> {
     /// Property: primary GID of the user
     #[inline]
     pub fn get_gid(&self) -> Result<u32> {
-        self.0.gid()
+        self.0.GID()
     }
 
     /// Property: idle hint state of the user
@@ -160,10 +160,15 @@ impl<'a> UserProxy<'a> {
         self.0.service()
     }
 
-    // #[inline]
-    // pub fn get_sessions(&self) -> Result<Vec<DbusPath>> {
-    //     self.0.sessions()
-    // }
+    #[inline]
+    pub fn get_sessions(&self) -> Result<Vec<DbusPath>> {
+        let tmp = self.0.sessions()?;
+        let mut sessions = Vec::with_capacity(tmp.len());
+        for t in tmp {
+            sessions.push(DbusPath::new(t.0, t.1))
+        }
+        Ok(sessions)
+    }
 
     /// Property: unit name of the user systemd slice of this user. Each logged
     /// in user gets a private slice.
@@ -193,7 +198,7 @@ impl<'a> UserProxy<'a> {
     /// Property: Unix UID of the user
     #[inline]
     pub fn get_uid(&self) -> zbus::Result<u32> {
-        self.0.uid()
+        self.0.UID()
     }
 }
 
@@ -225,8 +230,8 @@ mod tests {
         let user = UserProxy::new(&connection, &users[1]).unwrap();
 
         assert!(user.get_display().is_ok());
-        // Special case. Exists only on logged in user
-        //assert!(user.get_gid().is_ok());
+        // Special case. Exists only on users
+        assert!(user.get_gid().is_ok());
         assert!(user.get_is_idle_hint().is_ok());
         assert!(user.get_is_idle_since_hint().is_ok());
         assert!(user.get_is_idle_since_hint_monotonic().is_ok());
@@ -235,11 +240,11 @@ mod tests {
         assert!(user.get_runtime_path().is_ok());
         assert!(user.get_service().is_ok());
         assert!(user.get_slice().is_ok());
-        //assert!(user.get_sessions().is_ok());
+        assert!(user.get_sessions().is_ok());
         assert!(user.get_state().is_ok());
         assert!(user.get_timestamp().is_ok());
         assert!(user.get_timestamp_monotonic().is_ok());
-        // Special case. Not exists on first user
-        //assert!(user_proxy.get_uid().is_ok());
+        // Special case. Exists only on users
+        assert!(user.get_uid().is_ok());
     }
 }

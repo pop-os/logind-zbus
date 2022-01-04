@@ -22,6 +22,8 @@
 //! **NOTE!**
 //! Commented out sections aren't required yet, and need work for deserialising
 
+#![allow(non_snake_case)]
+
 use zbus::dbus_proxy;
 
 use crate::types::{ScheduledShutdown, SeatPath, SessionInfo, UserInfo};
@@ -95,10 +97,10 @@ trait Manager {
 
     // /// CreateSession method
     // #[inline]
-    // fn create_session<'a>(
-    //     &'a self,
+    // fn create_session(
+    //     &self,
     //     session: SessionCreate,
-    //     properties: &[(&str, zvariant::Value<'a>)],
+    //     properties: &[(&str, zbus::zvariant::Value<'_>)],
     // ) -> zbus::Result<(
     //     String,
     //     zvariant::OwnedObjectPath,
@@ -124,7 +126,7 @@ trait Manager {
 
     /// GetSessionByPID method
     #[inline]
-    fn get_session_by_pid(&self, pid: u32) -> zbus::Result<zvariant::OwnedObjectPath>;
+    fn get_session_by_PID(&self, pid: u32) -> zbus::Result<zvariant::OwnedObjectPath>;
 
     /// GetUser method
     #[inline]
@@ -132,7 +134,7 @@ trait Manager {
 
     /// GetUserByPID method
     #[inline]
-    fn get_user_by_pid(&self, pid: u32) -> zbus::Result<zvariant::OwnedObjectPath>;
+    fn get_user_by_PID(&self, pid: u32) -> zbus::Result<zvariant::OwnedObjectPath>;
 
     /// Halt method
     #[inline]
@@ -370,7 +372,7 @@ trait Manager {
     /// HoldoffTimeoutUSec property
     #[dbus_proxy(property)]
     #[inline]
-    fn holdoff_timeout_usec(&self) -> zbus::Result<u64>;
+    fn holdoff_timeout_USec(&self) -> zbus::Result<u64>;
 
     /// IdleAction property
     #[dbus_proxy(property)]
@@ -380,7 +382,7 @@ trait Manager {
     /// IdleActionUSec property
     #[dbus_proxy(property)]
     #[inline]
-    fn idle_action_usec(&self) -> zbus::Result<u64>;
+    fn idle_action_USec(&self) -> zbus::Result<u64>;
 
     /// IdleHint property
     #[dbus_proxy(property)]
@@ -400,7 +402,7 @@ trait Manager {
     /// InhibitDelayMaxUSec property
     #[dbus_proxy(property)]
     #[inline]
-    fn inhibit_delay_max_usec(&self) -> zbus::Result<u64>;
+    fn inhibit_delay_max_USec(&self) -> zbus::Result<u64>;
 
     /// InhibitorsMax property
     #[dbus_proxy(property)]
@@ -430,17 +432,17 @@ trait Manager {
     /// NAutoVTs property
     #[dbus_proxy(property)]
     #[inline]
-    fn nauto_vts(&self) -> zbus::Result<u32>;
+    fn NAuto_VTs(&self) -> zbus::Result<u32>;
 
     /// NCurrentInhibitors property
     #[dbus_proxy(property)]
     #[inline]
-    fn ncurrent_inhibitors(&self) -> zbus::Result<u64>;
+    fn NCurrent_inhibitors(&self) -> zbus::Result<u64>;
 
     /// NCurrentSessions property
     #[dbus_proxy(property)]
     #[inline]
-    fn ncurrent_sessions(&self) -> zbus::Result<u64>;
+    fn NCurrent_sessions(&self) -> zbus::Result<u64>;
 
     /// OnExternalPower property
     #[dbus_proxy(property)]
@@ -480,7 +482,7 @@ trait Manager {
     /// RemoveIPC property
     #[dbus_proxy(property)]
     #[inline]
-    fn remove_ipc(&self) -> zbus::Result<bool>;
+    fn remove_IPC(&self) -> zbus::Result<bool>;
 
     /// RuntimeDirectoryInodesMax property
     #[dbus_proxy(property)]
@@ -505,14 +507,10 @@ trait Manager {
     /// UserStopDelayUSec property
     #[dbus_proxy(property)]
     #[inline]
-    fn user_stop_delay_usec(&self) -> zbus::Result<u64>;
+    fn user_stop_delay_USec(&self) -> zbus::Result<u64>;
 
     /// WallMessage property
     #[dbus_proxy(property)]
     #[inline]
     fn wall_message(&self) -> zbus::Result<String>;
-
-    // #[DBusProxy(property)]
-    // #[inline]
-    // fn set_wall_message(&self, value: &str) -> zbus::Result<()>;
 }
