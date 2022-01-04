@@ -1,48 +1,28 @@
-use std::{
-    sync::{Arc, Mutex},
-    thread::sleep,
-    time::Duration,
-};
-
 use logind_zbus::{ManagerProxy, SessionProxy};
-use zbus::{Connection, SignalReceiver};
-
-fn print_unlocked() -> std::result::Result<(), zbus::Error> {
-    println!("Session unlocked fn call");
-    Ok(())
-}
+use zbus::blocking::Connection;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let connection = Connection::new_system()?;
+    let connection = Connection::system()?;
     let manager = ManagerProxy::new(&connection)?;
     let sessions = manager.list_sessions()?;
     dbg!(&sessions);
-    let session = SessionProxy::new(&connection, &sessions[0])?;
 
-    let end = Arc::new(Mutex::new(false));
-    let end2 = end.clone();
+    let mut seat = 0;
 
-    session.get_proxy().connect_unlock(print_unlocked)?;
-
-    session.connect_unlock(move || {
-        println!("Session unlocked");
-        if let Ok(mut lock) = end2.lock() {
-            *lock = true;
+    for (i, s) in sessions.iter().enumerate() {
+        if s.uid() >= 1000 {
+            seat = i;
+            break;
         }
-        Ok(())
-    })?;
+    }
 
-    let mut signals = SignalReceiver::new(connection);
-    signals.receive_for(session.get_proxy())?;
+    let session = SessionProxy::new(&connection, &sessions[seat])?;
 
-    loop {
-        signals.next_signal()?;
-        if let Ok(lock) = end.lock() {
-            if *lock {
-                break;
-            }
+    if let Ok(mut sig_iter) = session.get_proxy().receive_unlock() {
+        while let Some(_) = sig_iter.next() {
+            println!("Unlocked");
+            break;
         }
-        sleep(Duration::from_millis(100));
     }
 
     Ok(())

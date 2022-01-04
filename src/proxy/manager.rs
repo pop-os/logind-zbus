@@ -1,26 +1,28 @@
 use std::time::Duration;
 
-#[cfg(feature = "azync")]
-use zbus::azync::Connection;
-#[cfg(feature = "azync")]
-use zbus::azync::Proxy;
 #[cfg(not(feature = "azync"))]
+use zbus::blocking::Connection;
+#[cfg(not(feature = "azync"))]
+use zbus::blocking::Proxy;
+#[cfg(feature = "azync")]
 use zbus::Connection;
-#[cfg(not(feature = "azync"))]
+#[cfg(feature = "azync")]
 use zbus::Proxy;
-use zbus::{Result, SignalHandlerId};
-use zvariant::OwnedObjectPath;
+use zbus::Result;
 
-use crate::{generated::manager, types::{IsSupported, ScheduledShutdown, SeatPath, SessionInfo, ShutdownType, UserInfo}};
+use crate::{
+    generated::manager,
+    types::{IsSupported, ScheduledShutdown, SeatPath, SessionInfo, ShutdownType, UserInfo},
+};
 
 /// Proxy wrapper for the logind `Manager` dbus interface
 ///
 /// # Example
 /// ```rust
 /// use logind_zbus::ManagerProxy;
-/// use zbus::Connection;
+/// use zbus::blocking::Connection;
 ///
-/// let connection = Connection::new_system().unwrap();
+/// let connection = Connection::system().unwrap();
 /// let manager = ManagerProxy::new(&connection).unwrap();
 ///
 /// assert!(manager.can_suspend().is_ok());
@@ -33,6 +35,10 @@ use crate::{generated::manager, types::{IsSupported, ScheduledShutdown, SeatPath
 /// ```ignore
 /// *<ManagerProxy>.connect_<function name>()
 /// ```
+#[cfg(not(feature = "azync"))]
+pub struct ManagerProxy<'a>(manager::ManagerProxyBlocking<'a>);
+
+#[cfg(feature = "azync")]
 pub struct ManagerProxy<'a>(manager::ManagerProxy<'a>);
 
 impl<'a> std::ops::Deref for ManagerProxy<'a> {
@@ -64,7 +70,11 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for ManagerProxy<'a> {
 impl<'a> ManagerProxy<'a> {
     #[inline]
     pub fn new(connection: &Connection) -> Result<Self> {
-        Ok(Self(manager::ManagerProxy::new(&connection)?))
+        #[cfg(feature = "azync")]
+        return Ok(Self(manager::ManagerProxy::new(&connection)?));
+
+        #[cfg(not(feature = "azync"))]
+        return Ok(Self(manager::ManagerProxyBlocking::new(&connection)?));
     }
 
     /// Brings the session with the specified ID into the foreground
@@ -567,79 +577,56 @@ impl<'a> ManagerProxy<'a> {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    #[inline]
-    pub fn connect_prepare_for_shutdown<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_prepare_for_shutdown(callback)
-    }
-
-    #[inline]
-    pub fn connect_prepare_for_sleep<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(bool) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_prepare_for_sleep(callback)
-    }
-
-    #[inline]
-    pub fn connect_new_seat<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_seat_new(callback)
-    }
-
-    #[inline]
-    pub fn connect_seat_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_seat_removed(callback)
-    }
-
-    #[inline]
-    pub fn connect_new_session<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_session_new(callback)
-    }
-
-    #[inline]
-    pub fn connect_session_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(&str, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_session_removed(callback)
-    }
-
-    #[inline]
-    pub fn connect_new_user<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_user_new(callback)
-    }
-
-    #[inline]
-    pub fn connect_user_removed<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(u32, OwnedObjectPath) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_user_removed(callback)
-    }
+    receive_signal_name!(
+        receive_prepare_for_shutdown,
+        manager::PrepareForShutdownStream,
+        manager::PrepareForShutdownIterator
+    );
+    receive_signal_name!(
+        receive_prepare_for_sleep,
+        manager::PrepareForSleepStream,
+        manager::PrepareForSleepIterator
+    );
+    receive_signal_name!(
+        receive_seat_new,
+        manager::SeatNewStream,
+        manager::SeatNewIterator
+    );
+    receive_signal_name!(
+        receive_seat_removed,
+        manager::SeatRemovedStream,
+        manager::SeatRemovedIterator
+    );
+    receive_signal_name!(
+        receive_session_new,
+        manager::SessionNewStream,
+        manager::SessionNewIterator
+    );
+    receive_signal_name!(
+        receive_session_removed,
+        manager::SessionRemovedStream,
+        manager::SessionRemovedIterator
+    );
+    receive_signal_name!(
+        receive_user_new,
+        manager::UserNewStream,
+        manager::UserNewIterator
+    );
+    receive_signal_name!(
+        receive_user_removed,
+        manager::UserRemovedStream,
+        manager::UserRemovedIterator
+    );
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ManagerProxy;
-    use zbus::Connection;
+    use zbus::blocking::Connection;
 
     #[test]
     fn timestamps() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
 
         assert!(manager.can_suspend().is_ok());
@@ -647,7 +634,7 @@ mod tests {
 
     #[test]
     fn properties() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
 
         assert!(manager.get_block_inhibited().is_ok());

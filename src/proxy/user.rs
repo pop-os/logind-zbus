@@ -1,16 +1,20 @@
 use std::time::Duration;
 
-#[cfg(feature = "azync")]
-use zbus::azync::Connection;
-#[cfg(feature = "azync")]
-use zbus::azync::Proxy;
 #[cfg(not(feature = "azync"))]
+use zbus::blocking::Connection;
+#[cfg(not(feature = "azync"))]
+use zbus::blocking::Proxy;
+#[cfg(feature = "azync")]
 use zbus::Connection;
-#[cfg(not(feature = "azync"))]
+#[cfg(feature = "azync")]
 use zbus::Proxy;
 use zbus::Result;
 
-use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, IntoUserPath, UserState}};
+use crate::{
+    generated::user,
+    types::{DbusPath, IntoUserPath, UserState},
+    DEFAULT_DEST,
+};
 /// Proxy wrapper for the logind `User` dbus interface
 ///
 /// All `get_*` methods are property getters
@@ -19,9 +23,9 @@ use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, IntoUserPath, UserS
 /// ```rust
 /// use logind_zbus::ManagerProxy;
 /// use logind_zbus::UserProxy;
-/// use zbus::Connection;
+/// use zbus::blocking::Connection;
 ///
-/// let connection = Connection::new_system().unwrap();
+/// let connection = Connection::system().unwrap();
 /// let manager = ManagerProxy::new(&connection).unwrap();
 /// let users = manager.list_users().unwrap();
 ///
@@ -33,6 +37,10 @@ use crate::{DEFAULT_DEST, generated::user, types::{DbusPath, IntoUserPath, UserS
 /// let time2 = user.get_timestamp_monotonic().unwrap();
 /// assert!(time2.as_secs() > 0);
 /// ```
+#[cfg(not(feature = "azync"))]
+pub struct UserProxy<'a>(user::UserProxyBlocking<'a>);
+
+#[cfg(feature = "azync")]
 pub struct UserProxy<'a>(user::UserProxy<'a>);
 
 impl<'a> std::ops::Deref for UserProxy<'a> {
@@ -63,12 +71,21 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for UserProxy<'a> {
 
 impl<'a> UserProxy<'a> {
     #[inline]
-    pub fn new<U>(connection: &Connection, user: &'a U) -> Result<Self> where U: IntoUserPath {
-        Ok(Self(user::UserProxy::new_for(
-            &connection,
-            DEFAULT_DEST,
-            user.into_path_ref(),
-        )?))
+    pub fn new<U>(connection: &Connection, user: &'a U) -> Result<Self>
+    where
+        U: IntoUserPath,
+    {
+        #[cfg(feature = "azync")]
+        let s = user::UserProxy::builder(&connection);
+
+        #[cfg(not(feature = "azync"))]
+        let s = user::UserProxyBlocking::builder(&connection);
+
+        Ok(Self(
+            s.destination(DEFAULT_DEST)?
+                .path(user.into_path_ref())?
+                .build()?,
+        ))
     }
 
     #[inline]
@@ -184,11 +201,11 @@ impl<'a> UserProxy<'a> {
 mod tests {
     use crate::ManagerProxy;
     use crate::UserProxy;
-    use zbus::Connection;
+    use zbus::blocking::Connection;
 
     #[test]
     fn timestamps() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let users = manager.list_users().unwrap();
         let user = UserProxy::new(&connection, &users[0]).unwrap();
@@ -202,14 +219,14 @@ mod tests {
 
     #[test]
     fn properties() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let users = manager.list_users().unwrap();
-        let user = UserProxy::new(&connection, &users[0]).unwrap();
+        let user = UserProxy::new(&connection, &users[1]).unwrap();
 
         assert!(user.get_display().is_ok());
-        // Special case. Not exists on first user
-        //assert!(user_proxy.get_gid().is_ok());
+        // Special case. Exists only on logged in user
+        //assert!(user.get_gid().is_ok());
         assert!(user.get_is_idle_hint().is_ok());
         assert!(user.get_is_idle_since_hint().is_ok());
         assert!(user.get_is_idle_since_hint_monotonic().is_ok());

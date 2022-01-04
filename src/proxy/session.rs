@@ -1,16 +1,20 @@
 use std::time::Duration;
 
-#[cfg(feature = "azync")]
-use zbus::azync::Connection;
-#[cfg(feature = "azync")]
-use zbus::azync::Proxy;
 #[cfg(not(feature = "azync"))]
+use zbus::blocking::Connection;
+#[cfg(not(feature = "azync"))]
+use zbus::blocking::Proxy;
+#[cfg(feature = "azync")]
 use zbus::Connection;
-#[cfg(not(feature = "azync"))]
+#[cfg(feature = "azync")]
 use zbus::Proxy;
-use zbus::{Result, SignalHandlerId};
+use zbus::Result;
 
-use crate::{DEFAULT_DEST, generated::session, types::{Device, IntoSessionPath, SeatPath, SessionClass, SessionState, SessionType, UserPath}};
+use crate::{
+    generated::session,
+    types::{Device, IntoSessionPath, SeatPath, SessionClass, SessionState, SessionType, UserPath},
+    DEFAULT_DEST,
+};
 
 /// Proxy wrapper for the logind `Session` dbus interface
 ///
@@ -20,9 +24,9 @@ use crate::{DEFAULT_DEST, generated::session, types::{Device, IntoSessionPath, S
 /// ```rust
 /// use logind_zbus::ManagerProxy;
 /// use logind_zbus::SessionProxy;
-/// use zbus::Connection;
+/// use zbus::blocking::Connection;
 ///
-/// let connection = Connection::new_system().unwrap();
+/// let connection = Connection::system().unwrap();
 /// let manager = ManagerProxy::new(&connection).unwrap();
 /// let sessions = manager.list_sessions().unwrap();
 /// let session = SessionProxy::new(&connection, &sessions[0]).unwrap();
@@ -41,6 +45,10 @@ use crate::{DEFAULT_DEST, generated::session, types::{Device, IntoSessionPath, S
 /// ```ignore
 /// *<SessionProxy>.connect_<function name>()
 /// ```
+#[cfg(not(feature = "azync"))]
+pub struct SessionProxy<'a>(session::SessionProxyBlocking<'a>);
+
+#[cfg(feature = "azync")]
 pub struct SessionProxy<'a>(session::SessionProxy<'a>);
 
 impl<'a> std::ops::Deref for SessionProxy<'a> {
@@ -70,25 +78,35 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for SessionProxy<'a> {
 }
 
 impl<'a> SessionProxy<'a> {
-    pub fn new<S>(connection: &Connection, session: &'a S) -> Result<Self> where S: IntoSessionPath {
-        Ok(Self(session::SessionProxy::new_for(
-            &connection,
-            DEFAULT_DEST,
-            session.into_path_ref(),
-        )?))
+    pub fn new<S>(connection: &Connection, session: &'a S) -> Result<Self>
+    where
+        S: IntoSessionPath,
+    {
+        #[cfg(feature = "azync")]
+        let s = session::SessionProxy::builder(&connection);
+
+        #[cfg(not(feature = "azync"))]
+        let s = session::SessionProxyBlocking::builder(&connection);
+
+        Ok(Self(
+            s.destination(DEFAULT_DEST)?
+                .path(session.into_path_ref())?
+                .build()?,
+        ))
     }
 
     /// Borrow the underlying `SessionProxy` for use with zbus directly
+    #[inline]
+    #[cfg(feature = "azync")]
     pub fn get_proxy(&self) -> &session::SessionProxy {
         &self.0
     }
 
-    /// Deregister the signal handler with the ID handler_id.
-    ///
-    /// This method returns Ok(true) if a handler with the id handler_id is found
-    /// and removed; Ok(false) otherwise.
-    pub fn disconnect_signal(&self, handler_id: SignalHandlerId) -> zbus::fdo::Result<bool> {
-        self.0.disconnect_signal(handler_id)
+    /// Borrow the underlying `SessionProxy` for use with zbus directly
+    #[inline]
+    #[cfg(not(feature = "azync"))]
+    pub fn get_proxy(&self) -> &session::SessionProxyBlocking {
+        &self.0
     }
 
     /// Bring session to foreground
@@ -351,37 +369,22 @@ impl<'a> SessionProxy<'a> {
         self.0.vtnr()
     }
 
-    #[inline]
-    pub fn connect_lock<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_lock(callback)
-    }
-
-    #[inline]
-    pub fn connect_pause_device<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(u32, u32, &str) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_pause_device(callback)
-    }
-
-    #[inline]
-    pub fn connect_resume_device<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut(u32, u32, i32) -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_resume_device(callback)
-    }
-
-    #[inline]
-    pub fn connect_unlock<C>(&self, callback: C) -> zbus::fdo::Result<SignalHandlerId>
-    where
-        C: FnMut() -> std::result::Result<(), zbus::Error> + Send + 'static,
-    {
-        self.0.connect_unlock(callback)
-    }
+    receive_signal_name!(receive_lock, session::LockStream, session::LockIterator);
+    receive_signal_name!(
+        receive_unlock,
+        session::UnlockStream,
+        session::UnlockIterator
+    );
+    receive_signal_name!(
+        receive_pause_device,
+        session::PauseStream,
+        session::PauseDeviceIterator
+    );
+    receive_signal_name!(
+        receive_resume_device,
+        session::ResumeDeviceStream,
+        session::ResumeDeviceIterator
+    );
 }
 
 #[cfg(test)]
@@ -389,11 +392,11 @@ mod tests {
     use crate::ManagerProxy;
     use crate::SessionProxy;
     use core::panic;
-    use zbus::{Connection, SignalReceiver};
+    use zbus::blocking::Connection;
 
     #[test]
     fn timestamps() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let sessions = manager.list_sessions().unwrap();
         let session = SessionProxy::new(&connection, &sessions[0]).unwrap();
@@ -408,7 +411,7 @@ mod tests {
     #[test]
     fn list_active_session_types() {
         use crate::types::SessionType;
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let sessions = manager.list_sessions().unwrap();
 
@@ -431,22 +434,8 @@ mod tests {
     }
 
     #[test]
-    fn signals() {
-        let connection = Connection::new_system().unwrap();
-        let manager = ManagerProxy::new(&connection).unwrap();
-        let sessions = manager.list_sessions().unwrap();
-        let session = SessionProxy::new(&connection, &sessions[0]).unwrap();
-
-        session.connect_lock(|| Ok(())).unwrap();
-
-        let mut sig_recv = SignalReceiver::new(connection);
-        sig_recv.receive_for(session.get_proxy()).unwrap();
-        //sig_recv.next().unwrap();
-    }
-
-    #[test]
     fn properties() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let sessions = manager.list_sessions().unwrap();
         let session = SessionProxy::new(&connection, &sessions[0]).unwrap();

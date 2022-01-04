@@ -1,16 +1,20 @@
 use std::time::Duration;
 
-#[cfg(feature = "azync")]
-use zbus::azync::Connection;
-#[cfg(feature = "azync")]
-use zbus::azync::Proxy;
 #[cfg(not(feature = "azync"))]
+use zbus::blocking::Connection;
+#[cfg(not(feature = "azync"))]
+use zbus::blocking::Proxy;
+#[cfg(feature = "azync")]
 use zbus::Connection;
-#[cfg(not(feature = "azync"))]
+#[cfg(feature = "azync")]
 use zbus::Proxy;
 use zbus::Result;
 
-use crate::{DEFAULT_DEST, generated::seat, types::{SeatPath, SessionPath}};
+use crate::{
+    generated::seat,
+    types::{SeatPath, SessionPath},
+    DEFAULT_DEST,
+};
 
 /// Proxy wrapper for the logind `Seat` dbus interface
 ///
@@ -18,9 +22,9 @@ use crate::{DEFAULT_DEST, generated::seat, types::{SeatPath, SessionPath}};
 /// ```rust
 /// use logind_zbus::ManagerProxy;
 /// use logind_zbus::SeatProxy;
-/// use zbus::Connection;
+/// use zbus::blocking::Connection;
 ///
-/// let connection = Connection::new_system().unwrap();
+/// let connection = Connection::system().unwrap();
 /// let manager = ManagerProxy::new(&connection).unwrap();
 /// let seats = manager.list_seats().unwrap();
 /// let seat = SeatProxy::new(&connection, &seats[0]).unwrap();
@@ -29,6 +33,10 @@ use crate::{DEFAULT_DEST, generated::seat, types::{SeatPath, SessionPath}};
 ///
 /// assert!(manager.can_suspend().is_ok());
 /// ```
+#[cfg(not(feature = "azync"))]
+pub struct SeatProxy<'a>(seat::SeatProxyBlocking<'a>);
+
+#[cfg(feature = "azync")]
 pub struct SeatProxy<'a>(seat::SeatProxy<'a>);
 
 impl<'a> std::ops::Deref for SeatProxy<'a> {
@@ -60,11 +68,15 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for SeatProxy<'a> {
 impl<'a> SeatProxy<'a> {
     #[inline]
     pub fn new(connection: &Connection, path: &'a SeatPath) -> Result<Self> {
-        Ok(Self(seat::SeatProxy::new_for(
-            &connection,
-            DEFAULT_DEST,
-            path.path(),
-        )?))
+        #[cfg(feature = "azync")]
+        let s = seat::SeatProxy::builder(&connection);
+
+        #[cfg(not(feature = "azync"))]
+        let s = seat::SeatProxyBlocking::builder(&connection);
+
+        Ok(Self(
+            s.destination(DEFAULT_DEST)?.path(path.path())?.build()?,
+        ))
     }
 
     /// Brings the session with the specified ID into the foreground if the
@@ -155,11 +167,11 @@ impl<'a> SeatProxy<'a> {
 mod tests {
     use crate::ManagerProxy;
     use crate::SeatProxy;
-    use zbus::Connection;
+    use zbus::blocking::Connection;
 
     #[test]
     fn timestamps() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let seats = manager.list_seats().unwrap();
         let seat = SeatProxy::new(&connection, &seats[0]).unwrap();
@@ -169,7 +181,7 @@ mod tests {
 
     #[test]
     fn properties() {
-        let connection = Connection::new_system().unwrap();
+        let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let seats = manager.list_seats().unwrap();
         let seat = SeatProxy::new(&connection, &seats[0]).unwrap();
