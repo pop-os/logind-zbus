@@ -1,13 +1,7 @@
 use std::time::Duration;
 
-#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Connection;
-#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Proxy;
-#[cfg(feature = "non_blocking")]
-use zbus::Connection;
-#[cfg(feature = "non_blocking")]
-use zbus::Proxy;
 use zbus::Result;
 
 use crate::types::DbusPath;
@@ -34,11 +28,7 @@ use crate::{
 ///
 /// assert!(manager.can_suspend().is_ok());
 /// ```
-#[cfg(not(feature = "non_blocking"))]
 pub struct SeatProxy<'a>(seat::SeatProxyBlocking<'a>);
-
-#[cfg(feature = "non_blocking")]
-pub struct SeatProxy<'a>(seat::SeatProxy<'a>);
 
 impl<'a> std::ops::Deref for SeatProxy<'a> {
     type Target = Proxy<'a>;
@@ -69,10 +59,6 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for SeatProxy<'a> {
 impl<'a> SeatProxy<'a> {
     #[inline]
     pub fn new(connection: &Connection, path: &'a SeatPath) -> Result<Self> {
-        #[cfg(feature = "non_blocking")]
-        let s = seat::SeatProxy::builder(&connection);
-
-        #[cfg(not(feature = "non_blocking"))]
         let s = seat::SeatProxyBlocking::builder(&connection);
 
         Ok(Self(

@@ -1,13 +1,7 @@
 use std::time::Duration;
 
-#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Connection;
-#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Proxy;
-#[cfg(feature = "non_blocking")]
-use zbus::Connection;
-#[cfg(feature = "non_blocking")]
-use zbus::Proxy;
 use zbus::Result;
 
 use crate::{
@@ -45,11 +39,7 @@ use crate::{
 /// ```ignore
 /// *<SessionProxy>.connect_<function name>()
 /// ```
-#[cfg(not(feature = "non_blocking"))]
 pub struct SessionProxy<'a>(session::SessionProxyBlocking<'a>);
-
-#[cfg(feature = "non_blocking")]
-pub struct SessionProxy<'a>(session::SessionProxy<'a>);
 
 impl<'a> std::ops::Deref for SessionProxy<'a> {
     type Target = Proxy<'a>;
@@ -82,10 +72,6 @@ impl<'a> SessionProxy<'a> {
     where
         S: IntoSessionPath,
     {
-        #[cfg(feature = "non_blocking")]
-        let s = session::SessionProxy::builder(&connection);
-
-        #[cfg(not(feature = "non_blocking"))]
         let s = session::SessionProxyBlocking::builder(&connection);
 
         Ok(Self(
@@ -97,14 +83,6 @@ impl<'a> SessionProxy<'a> {
 
     /// Borrow the underlying `SessionProxy` for use with zbus directly
     #[inline]
-    #[cfg(feature = "non_blocking")]
-    pub fn get_proxy(&self) -> &session::SessionProxy {
-        &self.0
-    }
-
-    /// Borrow the underlying `SessionProxy` for use with zbus directly
-    #[inline]
-    #[cfg(not(feature = "non_blocking"))]
     pub fn get_proxy(&self) -> &session::SessionProxyBlocking {
         &self.0
     }

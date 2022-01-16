@@ -1,13 +1,7 @@
 use std::time::Duration;
 
-#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Connection;
-#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Proxy;
-#[cfg(feature = "non_blocking")]
-use zbus::Connection;
-#[cfg(feature = "non_blocking")]
-use zbus::Proxy;
 use zbus::Result;
 
 use crate::{
@@ -37,11 +31,7 @@ use crate::{
 /// let time2 = user.get_timestamp_monotonic().unwrap();
 /// assert!(time2.as_secs() > 0);
 /// ```
-#[cfg(not(feature = "non_blocking"))]
 pub struct UserProxy<'a>(user::UserProxyBlocking<'a>);
-
-#[cfg(feature = "non_blocking")]
-pub struct UserProxy<'a>(user::UserProxy<'a>);
 
 impl<'a> std::ops::Deref for UserProxy<'a> {
     type Target = Proxy<'a>;
@@ -75,10 +65,6 @@ impl<'a> UserProxy<'a> {
     where
         U: IntoUserPath,
     {
-        #[cfg(feature = "non_blocking")]
-        let s = user::UserProxy::builder(&connection);
-
-        #[cfg(not(feature = "non_blocking"))]
         let s = user::UserProxyBlocking::builder(&connection);
 
         Ok(Self(
@@ -227,7 +213,7 @@ mod tests {
         let connection = Connection::system().unwrap();
         let manager = ManagerProxy::new(&connection).unwrap();
         let users = manager.list_users().unwrap();
-        let user = UserProxy::new(&connection, &users[1]).unwrap();
+        let user = UserProxy::new(&connection, &users[0]).unwrap();
 
         assert!(user.get_display().is_ok());
         // Special case. Exists only on users

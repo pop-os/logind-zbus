@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+# [2.1.0]
+### Changed
+- Remove `non_blocking` feature as it is horribly broken and untested
+
 # [2.0.0]
 ### Changed
 - Upgrade crate to use zbus 2.0.0

@@ -1,13 +1,7 @@
 use std::time::Duration;
 
-#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Connection;
-#[cfg(not(feature = "non_blocking"))]
 use zbus::blocking::Proxy;
-#[cfg(feature = "non_blocking")]
-use zbus::Connection;
-#[cfg(feature = "non_blocking")]
-use zbus::Proxy;
 use zbus::Result;
 
 use crate::{
@@ -35,11 +29,7 @@ use crate::{
 /// ```ignore
 /// *<ManagerProxy>.connect_<function name>()
 /// ```
-#[cfg(not(feature = "non_blocking"))]
 pub struct ManagerProxy<'a>(manager::ManagerProxyBlocking<'a>);
-
-#[cfg(feature = "non_blocking")]
-pub struct ManagerProxy<'a>(manager::ManagerProxy<'a>);
 
 impl<'a> std::ops::Deref for ManagerProxy<'a> {
     type Target = Proxy<'a>;
@@ -70,10 +60,6 @@ impl<'a> std::convert::AsMut<Proxy<'a>> for ManagerProxy<'a> {
 impl<'a> ManagerProxy<'a> {
     #[inline]
     pub fn new(connection: &Connection) -> Result<Self> {
-        #[cfg(feature = "non_blocking")]
-        return Ok(Self(manager::ManagerProxy::new(&connection)?));
-
-        #[cfg(not(feature = "non_blocking"))]
         return Ok(Self(manager::ManagerProxyBlocking::new(&connection)?));
     }
 

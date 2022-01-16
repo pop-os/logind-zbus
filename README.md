@@ -8,11 +8,6 @@ of logind in rust, where possible parsing responses to concrete structs and enum
 The crate is usable as is, but some of the interface properties are missing while
 the associated issues are solved.
 
-## Features
-
-A single feature flag is available: `non_blocking`, which switches out `zbus::blocking::Connection`
-for `zbus::Connection` allowing for async rust.
-
 ---
 
 Q: `zbus-xmlgen` works fine, why not use the generated code directly?

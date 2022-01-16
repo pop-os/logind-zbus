@@ -1,6 +1,6 @@
 [package]
 name = "logind-zbus"
-version = "2.0.0"
+version = "2.1.0"
 license = "MPL-2.0"
 authors = ["Luke D Jones <luke@ljones.dev>"]
 edition = "2021"
@@ -11,10 +11,6 @@ documentation = "https://docs.rs/logind-zbus"
 description = "A dbus client (using zbus) for logind"
 keywords = ["systemd", "logind", "zbus"]
 categories = ["os::unix-apis"]
-
-[features]
-default = []
-non_blocking = []
 
 [dependencies]
 serde = "^1.0"
