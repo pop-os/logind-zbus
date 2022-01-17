@@ -4,7 +4,7 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::{DbusPath, TimeStamp};
+use crate::types::{DbusPath, TimeStamp, UserState};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.User",
@@ -37,12 +37,12 @@ trait User {
     /// IdleSinceHint property
     #[dbus_proxy(property)]
     #[inline]
-    fn idle_since_hint(&self) -> zbus::Result<u64>;
+    fn idle_since_hint(&self) -> zbus::Result<TimeStamp>;
 
     /// IdleSinceHintMonotonic property
     #[dbus_proxy(property)]
     #[inline]
-    fn idle_since_hint_monotonic(&self) -> zbus::Result<u64>;
+    fn idle_since_hint_monotonic(&self) -> zbus::Result<TimeStamp>;
 
     /// Linger property
     #[dbus_proxy(property)]
@@ -77,7 +77,7 @@ trait User {
     /// State property
     #[dbus_proxy(property)]
     #[inline]
-    fn state(&self) -> zbus::Result<String>;
+    fn state(&self) -> zbus::Result<UserState>;
 
     /// Timestamp property
     #[dbus_proxy(property)]

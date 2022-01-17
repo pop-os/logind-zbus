@@ -1,24 +1,27 @@
 use logind_zbus::{
+    manager::ManagerProxyBlocking,
+    session::SessionProxyBlocking,
     types::{SessionClass, SessionType},
-    ManagerProxy, SessionProxy,
 };
 use zbus::blocking::Connection;
 
 // Type, Class, Active
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection = Connection::system()?;
-    let manager = ManagerProxy::new(&connection)?;
+    let manager = ManagerProxyBlocking::new(&connection)?;
     let sessions = manager.list_sessions()?;
 
     for session in sessions {
-        let session_proxy = SessionProxy::new(&connection, &session)?;
+        let session_proxy = SessionProxyBlocking::builder(&connection)
+            .path(session.path())?
+            .build()?;
 
-        session_proxy.get_class().and_then(|class| {
+        session_proxy.class().and_then(|class| {
             if class == SessionClass::User {
-                session_proxy.get_type().and_then(|typ| {
+                session_proxy.type_().and_then(|typ| {
                     match typ {
                         SessionType::X11 | SessionType::Wayland | SessionType::MIR => {
-                            session_proxy.get_active().and_then(|active| {
+                            session_proxy.active().and_then(|active| {
                                 if active {
                                     println!("Active graphical session found");
                                 } else {

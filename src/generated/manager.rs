@@ -4,7 +4,9 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::{ScheduledShutdown, SeatPath, SessionInfo, UserInfo};
+use crate::types::{
+    Inhibitors, IsSupported, Mode, ScheduledShutdown, SeatPath, SessionInfo, UserInfo,
+};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Manager",
@@ -27,47 +29,47 @@ trait Manager {
 
     /// CanHalt method
     #[inline]
-    fn can_halt(&self) -> zbus::Result<String>;
+    fn can_halt(&self) -> zbus::Result<IsSupported>;
 
     /// CanHibernate method
     #[inline]
-    fn can_hibernate(&self) -> zbus::Result<String>;
+    fn can_hibernate(&self) -> zbus::Result<IsSupported>;
 
     /// CanHybridSleep method
     #[inline]
-    fn can_hybrid_sleep(&self) -> zbus::Result<String>;
+    fn can_hybrid_sleep(&self) -> zbus::Result<IsSupported>;
 
     /// CanPowerOff method
     #[inline]
-    fn can_power_off(&self) -> zbus::Result<String>;
+    fn can_power_off(&self) -> zbus::Result<IsSupported>;
 
     /// CanReboot method
     #[inline]
-    fn can_reboot(&self) -> zbus::Result<String>;
+    fn can_reboot(&self) -> zbus::Result<IsSupported>;
 
     /// CanRebootParameter method
     #[inline]
-    fn can_reboot_parameter(&self) -> zbus::Result<String>;
+    fn can_reboot_parameter(&self) -> zbus::Result<IsSupported>;
 
     /// CanRebootToBootLoaderEntry method
     #[inline]
-    fn can_reboot_to_boot_loader_entry(&self) -> zbus::Result<String>;
+    fn can_reboot_to_boot_loader_entry(&self) -> zbus::Result<IsSupported>;
 
     /// CanRebootToBootLoaderMenu method
     #[inline]
-    fn can_reboot_to_boot_loader_menu(&self) -> zbus::Result<String>;
+    fn can_reboot_to_boot_loader_menu(&self) -> zbus::Result<IsSupported>;
 
     /// CanRebootToFirmwareSetup method
     #[inline]
-    fn can_reboot_to_firmware_setup(&self) -> zbus::Result<String>;
+    fn can_reboot_to_firmware_setup(&self) -> zbus::Result<IsSupported>;
 
     /// CanSuspend method
     #[inline]
-    fn can_suspend(&self) -> zbus::Result<String>;
+    fn can_suspend(&self) -> zbus::Result<IsSupported>;
 
     /// CanSuspendThenHibernate method
     #[inline]
-    fn can_suspend_then_hibernate(&self) -> zbus::Result<String>;
+    fn can_suspend_then_hibernate(&self) -> zbus::Result<IsSupported>;
 
     /// CancelScheduledShutdown method
     #[inline]
@@ -133,7 +135,7 @@ trait Manager {
         what: &str,
         who: &str,
         why: &str,
-        mode: &str,
+        mode: Mode,
     ) -> zbus::Result<std::os::unix::io::RawFd>;
 
     /// KillSession method
@@ -146,7 +148,7 @@ trait Manager {
 
     /// ListInhibitors method
     #[inline]
-    fn list_inhibitors(&self) -> zbus::Result<Vec<(String, String, String, String, u32, u32)>>;
+    fn list_inhibitors(&self) -> zbus::Result<Vec<Inhibitors>>;
 
     /// ListSeats method
     #[inline]

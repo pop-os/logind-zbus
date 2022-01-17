@@ -1,9 +1,12 @@
-use std::{convert::TryFrom, time::Duration, ops::{Deref, DerefMut}};
+use std::{
+    convert::TryFrom,
+    ops::{Deref, DerefMut},
+    time::Duration,
+};
 
 use serde::{Deserialize, Serialize};
 
-use zvariant::{OwnedObjectPath, OwnedValue, Structure};
-use zvariant_derive::Type;
+use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type, Signature};
 
 /// If `IsSupported::Invalid` then the response from
 /// logind was not well defined.
@@ -22,8 +25,47 @@ impl From<&str> for IsSupported {
             "na" => Self::NA,
             "yes" => Self::Yes,
             "no" => Self::No,
-            _ => Self::NA,
+            "challenge" => Self::Challenge,
+            _ => Self::Invalid,
         }
+    }
+}
+
+impl From<String> for IsSupported {
+    fn from(s: String) -> Self {
+        Self::from(s.as_str())
+    }
+}
+
+impl From<u32> for IsSupported {
+    fn from(n: u32) -> Self {
+        match n {
+            0 => Self::NA,
+            1 => Self::Yes,
+            2 => Self::No,
+            3 => Self::Challenge,
+            _ => Self::Invalid,
+        }
+    }
+}
+
+impl TryFrom<OwnedValue> for IsSupported {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let s = <String>::try_from(value.clone());
+        if s.is_ok(){
+            return Ok(Self::from(s.unwrap().as_str()));
+        }
+
+        let value = <u32>::try_from(value)?;
+        Ok(Self::from(value))
+    }
+}
+
+impl Type for IsSupported {
+    fn signature() -> zvariant::Signature<'static> {
+        Signature::from_str_unchecked("s")
     }
 }
 
@@ -54,17 +96,12 @@ impl From<&str> for ShutdownType {
     }
 }
 
-impl From<ShutdownType> for &str {
-    fn from(s: ShutdownType) -> Self {
-        match s {
-            ShutdownType::PowerOff => "poweroff",
-            ShutdownType::DryPowerOff => "dry-poweroff",
-            ShutdownType::Reboot => "reboot",
-            ShutdownType::DryReboot => "dry-reboot",
-            ShutdownType::Halt => "halt",
-            ShutdownType::DryHalt => "dry-halt",
-            ShutdownType::Invalid => "invalid",
-        }
+impl TryFrom<OwnedValue> for ShutdownType {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <String>::try_from(value)?;
+        return Ok(Self::from(value.as_str()));
     }
 }
 
@@ -89,6 +126,15 @@ impl From<&str> for SessionState {
     }
 }
 
+impl TryFrom<OwnedValue> for SessionState {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <String>::try_from(value)?;
+        return Ok(Self::from(value.as_str()));
+    }
+}
+
 /// Class of Session. If `SessionClass::Invalid` then the response from
 /// logind was not well defined.
 #[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
@@ -107,6 +153,15 @@ impl From<&str> for SessionClass {
             "lock-screen" => Self::LockScreen,
             _ => Self::Invalid,
         }
+    }
+}
+
+impl TryFrom<OwnedValue> for SessionClass {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <String>::try_from(value)?;
+        return Ok(Self::from(value.as_str()));
     }
 }
 
@@ -257,6 +312,15 @@ impl From<&str> for SessionType {
     }
 }
 
+impl TryFrom<OwnedValue> for SessionType {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <String>::try_from(value)?;
+        return Ok(Self::from(value.as_str()));
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct ScheduledShutdown {
     id: String,
@@ -294,10 +358,6 @@ pub struct DbusPath {
 }
 
 impl DbusPath {
-    pub(crate) fn new(id: String, path: OwnedObjectPath) -> Self {
-        Self { id, path }
-    }
-
     pub fn id(&self) -> &str {
         &self.id
     }
@@ -386,13 +446,13 @@ impl IntoUserPath for UserInfo {
 }
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
-pub struct UserPath {
+pub struct User {
     uid: u32,
     /// Name of session user
     path: OwnedObjectPath,
 }
 
-impl UserPath {
+impl User {
     pub fn uid(&self) -> u32 {
         self.uid
     }
@@ -402,7 +462,7 @@ impl UserPath {
     }
 }
 
-impl TryFrom<OwnedValue> for UserPath {
+impl TryFrom<OwnedValue> for User {
     type Error = zbus::Error;
 
     fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
@@ -414,7 +474,7 @@ impl TryFrom<OwnedValue> for UserPath {
     }
 }
 
-impl IntoUserPath for UserPath {
+impl IntoUserPath for User {
     fn into_path(&self) -> OwnedObjectPath {
         self.path.clone()
     }
@@ -426,7 +486,7 @@ impl IntoUserPath for UserPath {
 
 /// State of a User. If `UserState::Invalid` then the response from
 /// logind was not well defined.
-#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Copy, Type, Serialize, Deserialize)]
 pub enum UserState {
     Online,
     Offline,
@@ -449,6 +509,15 @@ impl From<&str> for UserState {
     }
 }
 
+impl TryFrom<OwnedValue> for UserState {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <String>::try_from(value)?;
+        return Ok(UserState::from(value.as_str()));
+    }
+}
+
 pub struct TimeStamp(Duration);
 
 impl Deref for TimeStamp {
@@ -465,11 +534,27 @@ impl DerefMut for TimeStamp {
     }
 }
 
-impl From<OwnedValue> for TimeStamp {
-    fn from(owned: OwnedValue) -> Self {
-        match *owned {
-            zvariant::Value::U64(n) => Self(Duration::from_micros(n)),
-            _ => Self(Duration::default()),
-        }
+impl TryFrom<OwnedValue> for TimeStamp {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <u64>::try_from(value)?;
+        return Ok(Self(Duration::from_micros(value)));
     }
+}
+
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+pub struct Inhibitors {
+    what: String,
+    who: String,
+    why: String,
+    mode: Mode,
+    user_id: u32,
+    process_id: u32,
+}
+
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+pub enum Mode {
+    Block,
+    Delay,
 }
