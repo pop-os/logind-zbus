@@ -1,5 +1,39 @@
 use serde::{Serialize, Deserialize};
-use zvariant::{Type, OwnedValue, Structure, Signature};
+use zvariant::{Type, OwnedValue, Structure, Signature, OwnedObjectPath};
+
+use crate::types::{IntoPath};
+
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+pub struct UserInfo {
+    uid: u32,
+    name: String,
+    /// Name of session user
+    path: OwnedObjectPath,
+}
+
+impl UserInfo {
+    pub fn uid(&self) -> u32 {
+        self.uid
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn path(&self) -> &OwnedObjectPath {
+        &self.path
+    }
+}
+
+impl IntoPath for UserInfo {
+    fn into_path(&self) -> OwnedObjectPath {
+        self.path.clone()
+    }
+
+    fn into_path_ref(&self) -> &OwnedObjectPath {
+        &self.path
+    }
+}
 
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
@@ -135,4 +169,49 @@ pub enum Mode {
     Block,
     /// Inhibitor delays to a certain time
     Delay,
+}
+
+
+#[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
+pub struct SessionInfo {
+    /// Session ID
+    sid: String,
+    /// User ID
+    uid: u32,
+    /// Name of session user
+    user: String,
+    seat: String,
+    path: OwnedObjectPath,
+}
+
+impl SessionInfo {
+    pub fn sid(&self) -> &str {
+        &self.sid
+    }
+
+    pub fn uid(&self) -> u32 {
+        self.uid
+    }
+
+    pub fn user(&self) -> &str {
+        &self.user
+    }
+
+    pub fn seat(&self) -> &str {
+        &self.seat
+    }
+
+    pub fn path(&self) -> &OwnedObjectPath {
+        &self.path
+    }
+}
+
+impl IntoPath for SessionInfo {
+    fn into_path(&self) -> OwnedObjectPath {
+        self.path.clone()
+    }
+
+    fn into_path_ref(&self) -> &OwnedObjectPath {
+        &self.path
+    }
 }

@@ -1,6 +1,46 @@
 use serde::{Serialize, Deserialize};
-use zvariant::{OwnedValue, Signature, Type};
+use zvariant::{OwnedValue, Signature, Type, OwnedObjectPath, Structure};
 
+use crate::types::IntoPath;
+
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+pub struct User {
+    uid: u32,
+    /// Name of session user
+    path: OwnedObjectPath,
+}
+
+impl User {
+    pub fn uid(&self) -> u32 {
+        self.uid
+    }
+
+    pub fn path(&self) -> &OwnedObjectPath {
+        &self.path
+    }
+}
+
+impl TryFrom<OwnedValue> for User {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <Structure>::try_from(value)?;
+        return Ok(Self {
+            uid: <u32>::try_from(value.fields()[0].clone())?,
+            path: <OwnedObjectPath>::try_from(value.fields()[1].clone())?,
+        });
+    }
+}
+
+impl IntoPath for User {
+    fn into_path(&self) -> OwnedObjectPath {
+        self.path.clone()
+    }
+
+    fn into_path_ref(&self) -> &OwnedObjectPath {
+        &self.path
+    }
+}
 
 /// The type of Session. If `State::Invalid` then the response from
 /// logind was not well defined.

@@ -5,10 +5,10 @@
 use zbus::dbus_proxy;
 
 use crate::types::{
-    SeatPath, SessionInfo, UserInfo,
+    SeatPath,
 };
 
-use super::types::{IsSupported, ScheduledShutdown, Inhibitors, Mode, };
+use super::{types::{IsSupported, ScheduledShutdown, Inhibitors, Mode, }, UserInfo, SessionInfo};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Manager",

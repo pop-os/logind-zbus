@@ -4,9 +4,9 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::{SeatPath, TimeStamp, User};
+use crate::types::{SeatPath, TimeStamp};
 
-use super::{SessionType, Device, SessionClass, SessionState};
+use super::{SessionType, Device, SessionClass, SessionState, User};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Session",
