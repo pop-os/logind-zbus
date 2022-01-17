@@ -97,10 +97,10 @@ trait User {
 
 #[cfg(test)]
 mod tests {
-    use crate::generated::manager::ManagerProxy;
-    use crate::generated::manager::ManagerProxyBlocking;
     use crate::generated::user::UserProxy;
     use crate::generated::user::UserProxyBlocking;
+    use crate::manager::ManagerProxy;
+    use crate::manager::ManagerProxyBlocking;
     use crate::types::IntoUserPath;
     use futures_lite::future;
 

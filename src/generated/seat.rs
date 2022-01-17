@@ -74,10 +74,10 @@ trait Seat {
 
 #[cfg(test)]
 mod tests {
-    use crate::generated::manager::ManagerProxy;
-    use crate::generated::manager::ManagerProxyBlocking;
     use crate::generated::seat::SeatProxy;
     use crate::generated::seat::SeatProxyBlocking;
+    use crate::manager::ManagerProxy;
+    use crate::manager::ManagerProxyBlocking;
     use futures_lite::future;
 
     #[test]
