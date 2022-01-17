@@ -9,7 +9,7 @@ pub mod types;
 pub use proxy::manager::ManagerProxy;
 pub use proxy::seat::SeatProxy;
 pub use proxy::session::SessionProxy;
-pub use proxy::user::UserProxy;
+pub use generated::user;
 
 const DEFAULT_DEST: &str = "org.freedesktop.login1";
 

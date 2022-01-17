@@ -19,3 +19,6 @@ zbus = "^2.0.0"
 zbus_macros = "^2.0.0"
 zvariant = "^3.0.0"
 zvariant_derive = "^3.0.0"
+
+[dev-dependencies]
+futures-lite = "1.12.0"

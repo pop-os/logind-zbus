@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::{convert::TryFrom, time::Duration, ops::{Deref, DerefMut}};
 
 use serde::{Deserialize, Serialize};
 
@@ -445,6 +445,31 @@ impl From<&str> for UserState {
             "active" => Self::Active,
             "closing" => Self::Closing,
             _ => Self::Invalid,
+        }
+    }
+}
+
+pub struct TimeStamp(Duration);
+
+impl Deref for TimeStamp {
+    type Target = Duration;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for TimeStamp {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl From<OwnedValue> for TimeStamp {
+    fn from(owned: OwnedValue) -> Self {
+        match *owned {
+            zvariant::Value::U64(n) => Self(Duration::from_micros(n)),
+            _ => Self(Duration::default()),
         }
     }
 }
