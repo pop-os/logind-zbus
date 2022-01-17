@@ -69,41 +69,47 @@ impl Type for IsSupported {
     }
 }
 
-/// If `ShutdownType::Invalid` then the response from
-/// logind was not well defined.
-#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
-pub enum ShutdownType {
-    PowerOff,
-    DryPowerOff,
-    Reboot,
-    DryReboot,
-    Halt,
-    DryHalt,
-    Invalid,
-}
+// /// If `ShutdownType::Invalid` then the response from
+// /// logind was not well defined.
+// #[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+// pub enum ShutdownType {
+//     PowerOff,
+//     DryPowerOff,
+//     Reboot,
+//     DryReboot,
+//     Halt,
+//     DryHalt,
+//     Invalid,
+// }
 
-impl From<&str> for ShutdownType {
-    fn from(s: &str) -> Self {
-        match s.trim() {
-            "poweroff" => Self::PowerOff,
-            "dry-poweroff" => Self::DryPowerOff,
-            "reboot" => Self::Reboot,
-            "dry-reboot" => Self::DryReboot,
-            "halt" => Self::Halt,
-            "dry-halt" => Self::DryHalt,
-            _ => Self::Invalid,
-        }
-    }
-}
+// impl From<&str> for ShutdownType {
+//     fn from(s: &str) -> Self {
+//         match s.trim() {
+//             "poweroff" => Self::PowerOff,
+//             "dry-poweroff" => Self::DryPowerOff,
+//             "reboot" => Self::Reboot,
+//             "dry-reboot" => Self::DryReboot,
+//             "halt" => Self::Halt,
+//             "dry-halt" => Self::DryHalt,
+//             _ => Self::Invalid,
+//         }
+//     }
+// }
 
-impl TryFrom<OwnedValue> for ShutdownType {
-    type Error = zbus::Error;
+// impl TryFrom<OwnedValue> for ShutdownType {
+//     type Error = zbus::Error;
 
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
-        let value = <String>::try_from(value)?;
-        return Ok(Self::from(value.as_str()));
-    }
-}
+//     fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+//         let value = <String>::try_from(value)?;
+//         return Ok(Self::from(value.as_str()));
+//     }
+// }
+
+// impl Type for ShutdownType {
+//     fn signature() -> zvariant::Signature<'static> {
+//         Signature::from_str_unchecked("s")
+//     }
+// }
 
 /// State of a session. If `SessionState::Invalid` then the response from
 /// logind was not well defined.
@@ -132,6 +138,12 @@ impl TryFrom<OwnedValue> for SessionState {
     fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
         let value = <String>::try_from(value)?;
         return Ok(Self::from(value.as_str()));
+    }
+}
+
+impl Type for SessionState {
+    fn signature() -> zvariant::Signature<'static> {
+        Signature::from_str_unchecked("s")
     }
 }
 
@@ -321,6 +333,12 @@ impl TryFrom<OwnedValue> for SessionType {
     }
 }
 
+impl Type for SessionType {
+    fn signature() -> zvariant::Signature<'static> {
+        Signature::from_str_unchecked("s")
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct ScheduledShutdown {
     id: String,
@@ -486,7 +504,7 @@ impl IntoUserPath for User {
 
 /// State of a User. If `UserState::Invalid` then the response from
 /// logind was not well defined.
-#[derive(Debug, PartialEq, Clone, Copy, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub enum UserState {
     Online,
     Offline,
@@ -518,6 +536,12 @@ impl TryFrom<OwnedValue> for UserState {
     }
 }
 
+impl Type for UserState {
+    fn signature() -> zvariant::Signature<'static> {
+        Signature::from_str_unchecked("s")
+    }
+}
+
 pub struct TimeStamp(Duration);
 
 impl Deref for TimeStamp {
@@ -543,9 +567,51 @@ impl TryFrom<OwnedValue> for TimeStamp {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum InhibitThis {
+    Shutdown,
+    Sleep,
+    Idle,
+    HandlePowerKey,
+    HandleSuspendKey,
+    HandleHibernateKey,
+    HandleLidSwitch,
+    Invalid,
+}
+
+impl From<&str> for InhibitThis {
+    fn from(s: &str) -> Self {
+        match s.trim() {
+            "shutdown" => Self::Shutdown,
+            "sleep" => Self::Sleep,
+            "idle" => Self::Idle,
+            "handle-power-key" => Self::HandlePowerKey,
+            "handle-suspend-key" => Self::HandleSuspendKey,
+            "handle-hibernate-key" => Self::HandleHibernateKey,
+            "handle-lid-switch" => Self::HandleLidSwitch,
+            _ => Self::Invalid,
+        }
+    }
+}
+
+impl TryFrom<OwnedValue> for InhibitThis {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <String>::try_from(value)?;
+        return Ok(Self::from(value.as_str()));
+    }
+}
+
+impl Type for InhibitThis {
+    fn signature() -> zvariant::Signature<'static> {
+        Signature::from_str_unchecked("s")
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct Inhibitors {
-    what: String,
+    what: InhibitThis,
     who: String,
     why: String,
     mode: Mode,
@@ -553,8 +619,11 @@ pub struct Inhibitors {
     process_id: u32,
 }
 
+/// Used to determine behaviour of inhibitors
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub enum Mode {
+    /// Inhibitor is mandatory
     Block,
+    /// Inhibitor delays to a certain time
     Delay,
 }
