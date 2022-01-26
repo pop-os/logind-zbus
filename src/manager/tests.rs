@@ -1,6 +1,6 @@
 use futures_lite::future;
 
-use crate::manager::{ManagerProxy, ManagerProxyBlocking, Mode, InhibitThis};
+use crate::manager::{ManagerProxy, ManagerProxyBlocking, Mode, InhibitType};
 
 #[test]
 fn timestamps() {
@@ -146,10 +146,10 @@ fn inhibitors() {
     dbg!(&manager.list_inhibitors());
     assert!(manager.list_inhibitors().is_ok());
 
-    let res = manager.inhibit(InhibitThis::HandleHibernateKey,
-        "inhibit test",
-        "inhibit test",
-        <&str>::from(Mode::Delay));
+    let res = manager.inhibit(InhibitType::HandleHibernateKey,
+                              "inhibit test",
+                              "inhibit test",
+                              <&str>::from(Mode::Delay));
     dbg!(&res);
     assert!(res.is_ok());
 }

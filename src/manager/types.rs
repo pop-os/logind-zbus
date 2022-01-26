@@ -114,7 +114,65 @@ impl Type for IsSupported {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum InhibitThis {
+pub struct InhibitTypes(Vec<InhibitType>);
+
+impl FromStr for InhibitTypes {
+    type Err = fdo::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut buf = Vec::new();
+        for chunk in s.split(':') {
+            buf.push(InhibitType::from_str(chunk)?);
+        }
+        Ok(Self(buf))
+    }
+}
+
+impl From<&InhibitTypes> for String {
+    fn from(s: &InhibitTypes) -> Self {
+        let mut string = String::new();
+        for (i, inhibit) in s.0.iter().enumerate() {
+            if i > 0 && i < s.0.len() {
+                string.push(':');
+            }
+            string.push_str((*inhibit).into());
+        }
+        string
+    }
+}
+
+impl From<InhibitTypes> for String {
+    fn from(s: InhibitTypes) -> Self {
+        String::from(&s)
+    }
+}
+
+impl Serialize for InhibitTypes {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        serializer.serialize_str(String::from(self).as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for InhibitTypes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de> {
+        let s = String::deserialize(deserializer)?;
+        InhibitTypes::from_str(s.as_str()).map_err(serde::de::Error::custom)
+    }
+}
+
+impl Type for InhibitTypes {
+    fn signature() -> zvariant::Signature<'static> {
+        Signature::from_str_unchecked("s")
+    }
+}
+
+#[derive(Debug, PartialEq, Copy, Clone, Type)]
+#[zvariant(signature = "s")]
+pub enum InhibitType {
     Shutdown,
     Sleep,
     Idle,
@@ -124,7 +182,7 @@ pub enum InhibitThis {
     HandleLidSwitch,
 }
 
-impl FromStr for InhibitThis {
+impl FromStr for InhibitType {
     type Err = fdo::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -142,65 +200,41 @@ impl FromStr for InhibitThis {
     }
 }
 
-// impl FromStr for Vec<InhibitThis> {
-//     type Err = fdo::Error;
-//
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         let mut buf = Vec::new();
-//         for chunk in s.split(':') {
-//             buf.push(InhibitThis::from_str(s.as_str())?);
-//         }
-//         Ok(buf)
-//     }
-// }
-
-impl From<&InhibitThis> for &str {
-    fn from(s: &InhibitThis) -> Self {
+impl From<InhibitType> for &str {
+    fn from(s: InhibitType) -> Self {
         match s {
-            InhibitThis::Shutdown => "shutdown",
-            InhibitThis::Sleep => "sleep",
-            InhibitThis::Idle => "idle",
-            InhibitThis::HandlePowerKey => "handle-power-key",
-            InhibitThis::HandleSuspendKey => "handle-suspend-key",
-            InhibitThis::HandleHibernateKey => "handle-hibernate-key",
-            InhibitThis::HandleLidSwitch => "handle-lid-switch",
+            InhibitType::Shutdown => "shutdown",
+            InhibitType::Sleep => "sleep",
+            InhibitType::Idle => "idle",
+            InhibitType::HandlePowerKey => "handle-power-key",
+            InhibitType::HandleSuspendKey => "handle-suspend-key",
+            InhibitType::HandleHibernateKey => "handle-hibernate-key",
+            InhibitType::HandleLidSwitch => "handle-lid-switch",
         }
     }
 }
 
-impl From<InhibitThis> for &str {
-    fn from(s: InhibitThis) -> Self {
-        <&str>::from(&s)
-    }
-}
-
-impl Serialize for InhibitThis {
+impl Serialize for InhibitType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: serde::Serializer {
-        serializer.serialize_str(self.into())
+        serializer.serialize_str((*self).into())
     }
 }
 
-impl<'de> Deserialize<'de> for InhibitThis {
+impl<'de> Deserialize<'de> for InhibitType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
             D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
-        InhibitThis::from_str(s.as_str()).map_err(serde::de::Error::custom)
-    }
-}
-
-impl Type for InhibitThis {
-    fn signature() -> zvariant::Signature<'static> {
-        Signature::from_str_unchecked("s")
+        InhibitType::from_str(s.as_str()).map_err(serde::de::Error::custom)
     }
 }
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
-pub struct InhibitorLock {
+pub struct Inhibitor {
     /// What this lock is inhibiting
-    what: InhibitThis,
+    what: InhibitTypes,
     /// The name or ID of what is inhibiting, for example the applicaiton name creating this lock
     who: String,
     /// A description of why the lock was created

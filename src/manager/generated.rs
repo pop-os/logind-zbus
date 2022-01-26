@@ -4,7 +4,7 @@
 
 use zbus::dbus_proxy;
 
-use super::{types::{IsSupported, SeatPath, ScheduledShutdown, InhibitorLock}, UserInfo, SessionInfo, InhibitThis};
+use super::{types::{IsSupported, SeatPath, ScheduledShutdown, Inhibitor}, UserInfo, SessionInfo, InhibitType};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Manager",
@@ -130,7 +130,7 @@ trait Manager {
     #[inline]
     fn inhibit(
         &self,
-        what: InhibitThis,
+        what: InhibitType,
         who: &str,
         why: &str,
         mode: &str,
@@ -146,7 +146,7 @@ trait Manager {
 
     /// ListInhibitors method
     #[inline]
-    fn list_inhibitors(&self) -> zbus::Result<Vec<InhibitorLock>>;
+    fn list_inhibitors(&self) -> zbus::Result<Vec<Inhibitor>>;
 
     /// ListSeats method
     #[inline]
