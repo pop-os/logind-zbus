@@ -1,5 +1,8 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
-use zvariant::{OwnedObjectPath, OwnedValue, Signature, Structure, Type, Value};
+use zbus::fdo;
+use zvariant::{OwnedObjectPath, OwnedValue, Signature, Structure, Type};
 
 use crate::IntoPath;
 
@@ -119,12 +122,13 @@ pub enum InhibitThis {
     HandleSuspendKey,
     HandleHibernateKey,
     HandleLidSwitch,
-    Invalid,
 }
 
-impl From<&str> for InhibitThis {
-    fn from(s: &str) -> Self {
-        match s.trim() {
+impl FromStr for InhibitThis {
+    type Err = fdo::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s.trim() {
             "shutdown" => Self::Shutdown,
             "sleep" => Self::Sleep,
             "idle" => Self::Idle,
@@ -132,10 +136,23 @@ impl From<&str> for InhibitThis {
             "handle-suspend-key" => Self::HandleSuspendKey,
             "handle-hibernate-key" => Self::HandleHibernateKey,
             "handle-lid-switch" => Self::HandleLidSwitch,
-            _ => Self::Invalid,
-        }
+            _ => return Err(fdo::Error::IOError(format!("{} is an invalid variant", s))),
+        };
+        Ok(res)
     }
 }
+
+// impl FromStr for Vec<InhibitThis> {
+//     type Err = fdo::Error;
+//
+//     fn from_str(s: &str) -> Result<Self, Self::Err> {
+//         let mut buf = Vec::new();
+//         for chunk in s.split(':') {
+//             buf.push(InhibitThis::from_str(s.as_str())?);
+//         }
+//         Ok(buf)
+//     }
+// }
 
 impl From<&InhibitThis> for &str {
     fn from(s: &InhibitThis) -> Self {
@@ -147,7 +164,6 @@ impl From<&InhibitThis> for &str {
             InhibitThis::HandleSuspendKey => "handle-suspend-key",
             InhibitThis::HandleHibernateKey => "handle-hibernate-key",
             InhibitThis::HandleLidSwitch => "handle-lid-switch",
-            InhibitThis::Invalid => "invalid",
         }
     }
 }
@@ -160,52 +176,24 @@ impl From<InhibitThis> for &str {
 
 impl Serialize for InhibitThis {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer {
+        where
+            S: serde::Serializer {
         serializer.serialize_str(self.into())
     }
 }
 
 impl<'de> Deserialize<'de> for InhibitThis {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de> {
+        where
+            D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
-        Ok(InhibitThis::from(s.as_str()))
+        InhibitThis::from_str(s.as_str()).map_err(serde::de::Error::custom)
     }
 }
 
 impl Type for InhibitThis {
     fn signature() -> zvariant::Signature<'static> {
         Signature::from_str_unchecked("s")
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Type, Value, OwnedValue, Serialize, Deserialize)]
-pub struct InhibitLock {
-    /// What this lock is inhibiting
-    what: String,
-    /// The name or ID of what is inhibiting, for example the applicaiton name creating this lock
-    who: String,
-    /// A description of why the lock was created
-    why: String,
-    /// The lock behaviour
-    mode: String,
-}
-
-impl InhibitLock {
-    pub fn new(
-        what: InhibitThis,
-        who: String,
-        why: String,
-        mode: Mode,
-    ) -> Self {
-        Self {
-            what: <&str>::from(what).to_string(),
-            who,
-            why,
-            mode: <&str>::from(mode).to_string(),
-        }
     }
 }
 
@@ -224,7 +212,7 @@ pub struct InhibitorLock {
 }
 
 /// Used to determine behaviour of inhibitors
-#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Mode {
     /// Inhibitor is mandatory
     Block,
@@ -232,12 +220,54 @@ pub enum Mode {
     Delay,
 }
 
-impl From<Mode> for &str {
-    fn from(m: Mode) -> Self {
+impl FromStr for Mode {
+    type Err = fdo::Error;
+
+    fn from_str(m: &str) -> Result<Self, Self::Err> {
+        let res = match m {
+            "block" => Mode::Block,
+            "delay" => Mode::Delay,
+            _ => return Err(fdo::Error::IOError(format!("{} is an invalid variant", m))),
+        };
+        Ok(res)
+    }
+}
+
+impl From<&Mode> for &str {
+    fn from(m: &Mode) -> Self {
         match m {
             Mode::Block => "block",
             Mode::Delay => "delay",
         }
+    }
+}
+
+impl From<Mode> for &str {
+    fn from(s: Mode) -> Self {
+        <&str>::from(&s)
+    }
+}
+
+impl Serialize for Mode {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        serializer.serialize_str(self.into())
+    }
+}
+
+impl<'de> Deserialize<'de> for Mode {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de> {
+        let s = String::deserialize(deserializer)?;
+        Mode::from_str(s.as_str()).map_err(serde::de::Error::custom)
+    }
+}
+
+impl Type for Mode {
+    fn signature() -> zvariant::Signature<'static> {
+        Signature::from_str_unchecked("s")
     }
 }
 

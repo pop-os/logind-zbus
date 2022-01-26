@@ -4,7 +4,7 @@
 
 use zbus::dbus_proxy;
 
-use super::{types::{IsSupported, SeatPath, ScheduledShutdown, InhibitorLock, Mode, }, UserInfo, SessionInfo, InhibitThis};
+use super::{types::{IsSupported, SeatPath, ScheduledShutdown, InhibitorLock}, UserInfo, SessionInfo, InhibitThis};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Manager",
