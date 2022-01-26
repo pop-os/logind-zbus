@@ -4,9 +4,9 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::{TimeStamp};
+use crate::TimeStamp;
 
-use super::{UserState, UserPath};
+use super::{UserPath, UserState};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.User",

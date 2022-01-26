@@ -1,13 +1,16 @@
-use serde::{Serialize, Deserialize};
-use zvariant::{Type, OwnedValue, Structure, Signature, OwnedObjectPath};
+use serde::{Deserialize, Serialize};
+use zvariant::{OwnedObjectPath, OwnedValue, Signature, Structure, Type, Value};
 
-use crate::types::{IntoPath};
+use crate::IntoPath;
 
+/// Basic user information
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct UserInfo {
+    /// User ID
     uid: u32,
+    /// User name
     name: String,
-    /// Name of session user
+    /// DBUS path to this user
     path: OwnedObjectPath,
 }
 
@@ -35,11 +38,11 @@ impl IntoPath for UserInfo {
     }
 }
 
-
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct ScheduledShutdown {
+    /// Name of the shutdown
     id: String,
-    /// Name of session user
+    /// Time in micros
     time: u64,
 }
 
@@ -65,8 +68,6 @@ impl TryFrom<OwnedValue> for ScheduledShutdown {
     }
 }
 
-/// If `IsSupported::Invalid` then the response from
-/// logind was not well defined.
 #[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub enum IsSupported {
     NA,
@@ -109,8 +110,7 @@ impl Type for IsSupported {
     }
 }
 
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum InhibitThis {
     Shutdown,
     Sleep,
@@ -137,12 +137,41 @@ impl From<&str> for InhibitThis {
     }
 }
 
-impl TryFrom<OwnedValue> for InhibitThis {
-    type Error = zbus::Error;
+impl From<&InhibitThis> for &str {
+    fn from(s: &InhibitThis) -> Self {
+        match s {
+            InhibitThis::Shutdown => "shutdown",
+            InhibitThis::Sleep => "sleep",
+            InhibitThis::Idle => "idle",
+            InhibitThis::HandlePowerKey => "handle-power-key",
+            InhibitThis::HandleSuspendKey => "handle-suspend-key",
+            InhibitThis::HandleHibernateKey => "handle-hibernate-key",
+            InhibitThis::HandleLidSwitch => "handle-lid-switch",
+            InhibitThis::Invalid => "invalid",
+        }
+    }
+}
 
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
-        let value = <String>::try_from(value)?;
-        return Ok(Self::from(value.as_str()));
+impl From<InhibitThis> for &str {
+    fn from(s: InhibitThis) -> Self {
+        <&str>::from(&s)
+    }
+}
+
+impl Serialize for InhibitThis {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+        serializer.serialize_str(self.into())
+    }
+}
+
+impl<'de> Deserialize<'de> for InhibitThis {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de> {
+        let s = String::deserialize(deserializer)?;
+        Ok(InhibitThis::from(s.as_str()))
     }
 }
 
@@ -152,11 +181,43 @@ impl Type for InhibitThis {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
-pub struct Inhibitors {
-    what: InhibitThis,
+#[derive(Debug, PartialEq, Clone, Type, Value, OwnedValue, Serialize, Deserialize)]
+pub struct InhibitLock {
+    /// What this lock is inhibiting
+    what: String,
+    /// The name or ID of what is inhibiting, for example the applicaiton name creating this lock
     who: String,
+    /// A description of why the lock was created
     why: String,
+    /// The lock behaviour
+    mode: String,
+}
+
+impl InhibitLock {
+    pub fn new(
+        what: InhibitThis,
+        who: String,
+        why: String,
+        mode: Mode,
+    ) -> Self {
+        Self {
+            what: <&str>::from(what).to_string(),
+            who,
+            why,
+            mode: <&str>::from(mode).to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+pub struct InhibitorLock {
+    /// What this lock is inhibiting
+    what: InhibitThis,
+    /// The name or ID of what is inhibiting, for example the applicaiton name creating this lock
+    who: String,
+    /// A description of why the lock was created
+    why: String,
+    /// The lock behaviour
     mode: Mode,
     user_id: u32,
     process_id: u32,
@@ -171,6 +232,14 @@ pub enum Mode {
     Delay,
 }
 
+impl From<Mode> for &str {
+    fn from(m: Mode) -> Self {
+        match m {
+            Mode::Block => "block",
+            Mode::Delay => "delay",
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
 pub struct SessionInfo {
@@ -180,7 +249,9 @@ pub struct SessionInfo {
     uid: u32,
     /// Name of session user
     user: String,
+    /// The session seat label
     seat: String,
+    /// DBUS path for this session
     path: OwnedObjectPath,
 }
 
@@ -213,5 +284,35 @@ impl IntoPath for SessionInfo {
 
     fn into_path_ref(&self) -> &OwnedObjectPath {
         &self.path
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+pub struct SeatPath {
+    /// The seat label
+    id: String,
+    /// DBUS path for this seat
+    path: OwnedObjectPath,
+}
+
+impl SeatPath {
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    pub fn path(&self) -> &OwnedObjectPath {
+        &self.path
+    }
+}
+
+impl TryFrom<OwnedValue> for SeatPath {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <Structure>::try_from(value)?;
+        return Ok(Self {
+            id: <String>::try_from(value.fields()[0].clone())?,
+            path: <OwnedObjectPath>::try_from(value.fields()[1].clone())?,
+        });
     }
 }

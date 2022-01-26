@@ -1,6 +1,5 @@
-use serde::{Serialize, Deserialize};
-use zvariant::{OwnedValue, Signature, Type, OwnedObjectPath, Structure};
-
+use serde::{Deserialize, Serialize};
+use zvariant::{OwnedObjectPath, OwnedValue, Signature, Structure, Type};
 
 /// State of a User. If `UserState::Invalid` then the response from
 /// logind was not well defined.
@@ -41,7 +40,6 @@ impl Type for UserState {
         Signature::from_str_unchecked("s")
     }
 }
-
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct UserPath {

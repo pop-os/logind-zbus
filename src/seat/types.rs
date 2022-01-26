@@ -1,8 +1,7 @@
-use serde::{Serialize, Deserialize};
-use zvariant::{Type, OwnedObjectPath, OwnedValue, Structure};
+use serde::{Deserialize, Serialize};
+use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
 
-use crate::types::IntoPath;
-
+use crate::IntoPath;
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct SessionPath {

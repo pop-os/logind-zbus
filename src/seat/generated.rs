@@ -4,7 +4,7 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::{TimeStamp};
+use crate::TimeStamp;
 
 use super::SessionPath;
 

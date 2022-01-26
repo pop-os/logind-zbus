@@ -14,11 +14,8 @@ categories = ["os::unix-apis"]
 
 [dependencies]
 serde = "^1.0"
-serde_json = "^1.0"
 zbus = "^2.0.0"
-zbus_macros = "^2.0.0"
-zvariant = "^3.0.0"
-zvariant_derive = "^3.0.0"
+zvariant = "^3.1.0"
 
 [dev-dependencies]
 futures-lite = "1.12.0"

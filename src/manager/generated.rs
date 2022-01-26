@@ -4,11 +4,7 @@
 
 use zbus::dbus_proxy;
 
-use crate::types::{
-    SeatPath,
-};
-
-use super::{types::{IsSupported, ScheduledShutdown, Inhibitors, Mode, }, UserInfo, SessionInfo};
+use super::{types::{IsSupported, SeatPath, ScheduledShutdown, InhibitorLock, Mode, }, UserInfo, SessionInfo, InhibitThis};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Manager",
@@ -134,10 +130,10 @@ trait Manager {
     #[inline]
     fn inhibit(
         &self,
-        what: &str,
+        what: InhibitThis,
         who: &str,
         why: &str,
-        mode: Mode,
+        mode: &str,
     ) -> zbus::Result<std::os::unix::io::RawFd>;
 
     /// KillSession method
@@ -150,7 +146,7 @@ trait Manager {
 
     /// ListInhibitors method
     #[inline]
-    fn list_inhibitors(&self) -> zbus::Result<Vec<Inhibitors>>;
+    fn list_inhibitors(&self) -> zbus::Result<Vec<InhibitorLock>>;
 
     /// ListSeats method
     #[inline]
@@ -186,7 +182,7 @@ trait Manager {
 
     /// ScheduleShutdown method
     #[inline]
-    fn schedule_shutdown(&self, r#type: &str, usec: u64) -> zbus::Result<()>;
+    fn schedule_shutdown(&self, shutdown: ScheduledShutdown) -> zbus::Result<()>;
 
     /// SetRebootParameter method
     #[inline]

@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
-use zvariant::{OwnedValue, Signature, Type, OwnedObjectPath, Structure};
+use serde::{Deserialize, Serialize};
+use zvariant::{OwnedObjectPath, OwnedValue, Signature, Structure, Type};
 
-use crate::types::IntoPath;
+use crate::IntoPath;
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct User {
@@ -97,7 +97,6 @@ impl Device {
         self.inactive
     }
 }
-
 
 /// Class of Session. If `SessionClass::Invalid` then the response from
 /// logind was not well defined.

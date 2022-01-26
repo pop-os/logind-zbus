@@ -1,6 +1,6 @@
 use logind_zbus::{
     manager::ManagerProxyBlocking,
-    session::{SessionProxyBlocking, SessionClass, SessionType},
+    session::{SessionClass, SessionProxyBlocking, SessionType},
 };
 use zbus::blocking::Connection;
 
