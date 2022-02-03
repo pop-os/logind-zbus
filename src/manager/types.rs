@@ -71,49 +71,60 @@ impl TryFrom<OwnedValue> for ScheduledShutdown {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[zvariant(signature = "s")]
 pub enum IsSupported {
     NA,
     Yes,
     No,
     Challenge,
-    Invalid,
 }
 
-impl From<&str> for IsSupported {
-    fn from(s: &str) -> Self {
-        match s.trim() {
+impl FromStr for IsSupported {
+    type Err = fdo::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s.trim() {
             "na" => Self::NA,
             "yes" => Self::Yes,
             "no" => Self::No,
             "challenge" => Self::Challenge,
-            _ => Self::Invalid,
+            _ => return Err(fdo::Error::IOError(format!("{} is an invalid variant", s))),
+        };
+        Ok(res)
+    }
+}
+
+impl From<IsSupported> for &str {
+    fn from(s: IsSupported) -> Self {
+        match s {
+            IsSupported::NA => "na",
+            IsSupported::Yes => "yes",
+            IsSupported::No => "no",
+            IsSupported::Challenge => "challenge",
         }
     }
 }
 
-impl From<String> for IsSupported {
-    fn from(s: String) -> Self {
-        Self::from(s.as_str())
+impl Serialize for IsSupported {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        serializer.serialize_str((*self).into())
     }
 }
 
-impl TryFrom<OwnedValue> for IsSupported {
-    type Error = zbus::Error;
-
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
-        let value = <String>::try_from(value)?;
-        Ok(Self::from(value))
+impl<'de> Deserialize<'de> for IsSupported {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de> {
+        let s = String::deserialize(deserializer)?;
+        IsSupported::from_str(s.as_str()).map_err(serde::de::Error::custom)
     }
 }
 
-impl Type for IsSupported {
-    fn signature() -> zvariant::Signature<'static> {
-        Signature::from_str_unchecked("s")
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Type)]
+#[zvariant(signature = "s")]
 pub struct InhibitTypes(Vec<InhibitType>);
 
 impl FromStr for InhibitTypes {
@@ -161,12 +172,6 @@ impl<'de> Deserialize<'de> for InhibitTypes {
             D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
         InhibitTypes::from_str(s.as_str()).map_err(serde::de::Error::custom)
-    }
-}
-
-impl Type for InhibitTypes {
-    fn signature() -> zvariant::Signature<'static> {
-        Signature::from_str_unchecked("s")
     }
 }
 
@@ -246,7 +251,8 @@ pub struct Inhibitor {
 }
 
 /// Used to determine behaviour of inhibitors
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Type)]
+#[zvariant(signature = "s")]
 pub enum Mode {
     /// Inhibitor is mandatory
     Block,
@@ -296,12 +302,6 @@ impl<'de> Deserialize<'de> for Mode {
             D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
         Mode::from_str(s.as_str()).map_err(serde::de::Error::custom)
-    }
-}
-
-impl Type for Mode {
-    fn signature() -> zvariant::Signature<'static> {
-        Signature::from_str_unchecked("s")
     }
 }
 

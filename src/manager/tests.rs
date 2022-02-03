@@ -1,6 +1,7 @@
 use futures_lite::future;
+use zbus::export::futures_util::TryFutureExt;
 
-use crate::manager::{ManagerProxy, ManagerProxyBlocking, Mode, InhibitType};
+use crate::manager::{InhibitType, ManagerProxy, ManagerProxyBlocking, Mode, IsSupported};
 
 #[test]
 fn timestamps() {
@@ -143,13 +144,44 @@ fn inhibitors() {
 
     assert!(manager.can_suspend().is_ok());
 
-    dbg!(&manager.list_inhibitors());
-    assert!(manager.list_inhibitors().is_ok());
+    let inhibitors = manager.list_inhibitors();
+    let n_inhibitors = manager.NCurrent_inhibitors().unwrap();
+    assert!(inhibitors.is_ok());
+    assert_eq!(n_inhibitors, inhibitors.unwrap().len() as u64);
 
-    let res = manager.inhibit(InhibitType::HandleHibernateKey,
-                              "inhibit test",
-                              "inhibit test",
-                              <&str>::from(Mode::Delay));
-    dbg!(&res);
+    let res = manager.inhibit(
+        InhibitType::HandleHibernateKey,
+        "inhibit test",
+        "inhibit test",
+        <&str>::from(Mode::Delay),
+    );
+
+    assert!(res.is_err());
+    res.map_err(|e| {
+        if let zbus::Error::MethodError(_, data, _) = e {
+            assert_eq!(
+                data,
+                Some("Delay inhibitors only supported for shutdown and sleep".to_string())
+            )
+        }
+    })
+    .ok();
+}
+
+#[test]
+fn can_do() {
+    let connection = zbus::blocking::Connection::system().unwrap();
+    let manager = ManagerProxyBlocking::new(&connection).unwrap();
+
+    let res = manager.can_suspend();
     assert!(res.is_ok());
+    assert_eq!(res, zbus::Result::Ok(IsSupported::Yes));
+
+    let res = manager.can_hybrid_sleep();
+    assert!(res.is_ok());
+    assert_eq!(res, zbus::Result::Ok(IsSupported::NA));
+
+    let res = manager.can_hibernate();
+    assert!(res.is_ok());
+    assert_eq!(res, zbus::Result::Ok(IsSupported::NA));
 }
