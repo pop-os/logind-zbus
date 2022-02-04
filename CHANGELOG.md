@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+# [3.0.0]
+### Changed
+- Remove all wrapping as generated implementations are easily accessible now
+- Adjust some serde impls for enums
+- Add a few more tests, for both blocking and async
+- *Note:* some I/O may still change a little but most things should now be stabilised
+
 # [2.1.0]
 ### Changed
 - Remove `non_blocking` feature as it is horribly broken and untested

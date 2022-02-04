@@ -1,11 +1,10 @@
-use logind_zbus::{ManagerProxy, SessionProxy};
+use logind_zbus::{manager::ManagerProxyBlocking, session::SessionProxyBlocking};
 use zbus::blocking::Connection;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection = Connection::system()?;
-    let manager = ManagerProxy::new(&connection)?;
+    let manager = ManagerProxyBlocking::new(&connection)?;
     let sessions = manager.list_sessions()?;
-    dbg!(&sessions);
 
     let mut seat = 0;
 
@@ -16,9 +15,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let session = SessionProxy::new(&connection, &sessions[seat])?;
+    let session = SessionProxyBlocking::builder(&connection)
+        .path(sessions[seat].path())?
+        .build()?;
 
-    if let Ok(mut sig_iter) = session.get_proxy().receive_unlock() {
+    if let Ok(mut sig_iter) = session.receive_unlock() {
         while let Some(_) = sig_iter.next() {
             println!("Unlocked");
             break;
