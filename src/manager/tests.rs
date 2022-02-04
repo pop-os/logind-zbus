@@ -1,5 +1,5 @@
+use crate::manager::{InhibitType, IsSupported, ManagerProxy, ManagerProxyBlocking, Mode};
 use futures_lite::future;
-use crate::manager::{InhibitType, ManagerProxy, ManagerProxyBlocking, Mode, IsSupported};
 
 #[test]
 fn timestamps() {

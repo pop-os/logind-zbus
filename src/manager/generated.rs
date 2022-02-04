@@ -2,10 +2,13 @@
 
 #![allow(non_snake_case)]
 
-use zbus::dbus_proxy;
 use crate::SomePath;
+use zbus::dbus_proxy;
 
-use super::{types::{IsSupported, ScheduledShutdown, Inhibitor}, UserInfo, SessionInfo, InhibitType};
+use super::{
+    types::{Inhibitor, IsSupported, ScheduledShutdown},
+    InhibitType, SessionInfo, UserInfo,
+};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Manager",

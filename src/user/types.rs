@@ -1,8 +1,8 @@
-use std::str::FromStr;
+use crate::{enum_impl_serde_str, enum_impl_str_conv, impl_try_from_owned_as_str};
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use zbus::fdo;
 use zvariant::{OwnedValue, Type};
-use crate::{enum_impl_serde_str, enum_impl_str_conv, impl_try_from_owned_as_str};
 
 /// State of a User
 #[derive(Debug, PartialEq, Clone, Copy, Type)]
@@ -23,4 +23,3 @@ enum_impl_str_conv!(UserState, {
     "active": Active,
     "closing": Closing,
 });
-

@@ -6,7 +6,7 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use zvariant::{OwnedObjectPath, OwnedValue, Type, Structure};
+use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
 pub mod manager;
 pub mod seat;
 pub mod session;
@@ -79,21 +79,23 @@ macro_rules! enum_impl_serde_str {
     ($type_name:ident) => {
         impl Serialize for $type_name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-                where
-                    S: serde::Serializer {
+            where
+                S: serde::Serializer,
+            {
                 serializer.serialize_str(self.into())
             }
         }
 
         impl<'de> Deserialize<'de> for $type_name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-                where
-                    D: serde::Deserializer<'de> {
+            where
+                D: serde::Deserializer<'de>,
+            {
                 let s = String::deserialize(deserializer)?;
                 $type_name::from_str(s.as_str()).map_err(serde::de::Error::custom)
             }
         }
-    }
+    };
 }
 
 #[macro_export]
@@ -107,7 +109,7 @@ macro_rules! impl_try_from_owned_as_str {
                 return Ok($type_name::from_str(value.as_str())?);
             }
         }
-    }
+    };
 }
 
 #[macro_export]

@@ -6,7 +6,7 @@ use zbus::dbus_proxy;
 
 use crate::{SomePath, TimeStamp};
 
-use super::{UserState};
+use super::UserState;
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.User",

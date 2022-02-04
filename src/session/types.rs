@@ -1,9 +1,9 @@
-use std::str::FromStr;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use zbus::fdo;
 use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
 
-use crate::{enum_impl_serde_str, enum_impl_str_conv, IntoPath, impl_try_from_owned_as_str};
+use crate::{enum_impl_serde_str, enum_impl_str_conv, impl_try_from_owned_as_str, IntoPath};
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct User {

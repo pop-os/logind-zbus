@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use zbus::fdo;
 use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
 
@@ -130,16 +130,18 @@ impl From<&InhibitTypes> for String {
 
 impl Serialize for InhibitTypes {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
+    where
+        S: serde::Serializer,
+    {
         serializer.serialize_str(String::from(self).as_str())
     }
 }
 
 impl<'de> Deserialize<'de> for InhibitTypes {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de> {
+    where
+        D: serde::Deserializer<'de>,
+    {
         let s = String::deserialize(deserializer)?;
         InhibitTypes::from_str(s.as_str()).map_err(serde::de::Error::custom)
     }
