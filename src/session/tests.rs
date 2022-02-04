@@ -2,7 +2,6 @@ use crate::manager::ManagerProxy;
 use crate::manager::ManagerProxyBlocking;
 use crate::session::SessionProxy;
 use crate::session::SessionProxyBlocking;
-use core::panic;
 use futures_lite::future;
 
 use super::SessionType;
@@ -47,7 +46,6 @@ fn list_active_session_types() {
                 SessionType::Unspecified => {
                     assert_eq!(st, SessionType::Unspecified)
                 }
-                SessionType::Invalid => panic!("session type response was bad"),
             }
         }
     }
@@ -136,7 +134,6 @@ fn list_active_session_types_async() {
                     SessionType::Unspecified => {
                         assert_eq!(st, SessionType::Unspecified)
                     }
-                    SessionType::Invalid => panic!("session type response was bad"),
                 }
             }
         }

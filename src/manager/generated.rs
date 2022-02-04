@@ -3,8 +3,9 @@
 #![allow(non_snake_case)]
 
 use zbus::dbus_proxy;
+use crate::SomePath;
 
-use super::{types::{IsSupported, SeatPath, ScheduledShutdown, Inhibitor}, UserInfo, SessionInfo, InhibitType};
+use super::{types::{IsSupported, ScheduledShutdown, Inhibitor}, UserInfo, SessionInfo, InhibitType};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Manager",
@@ -150,7 +151,7 @@ trait Manager {
 
     /// ListSeats method
     #[inline]
-    fn list_seats(&self) -> zbus::Result<Vec<SeatPath>>;
+    fn list_seats(&self) -> zbus::Result<Vec<SomePath>>;
 
     /// ListSessions method
     #[inline]

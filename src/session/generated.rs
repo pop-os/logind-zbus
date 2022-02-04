@@ -4,7 +4,7 @@
 
 use zbus::dbus_proxy;
 
-use crate::{manager::SeatPath, TimeStamp};
+use crate::{SomePath, TimeStamp};
 
 use super::{Device, SessionClass, SessionState, SessionType, User};
 
@@ -177,7 +177,7 @@ trait Session {
     /// Seat property
     #[dbus_proxy(property)]
     #[inline]
-    fn seat(&self) -> zbus::Result<SeatPath>;
+    fn seat(&self) -> zbus::Result<SomePath>;
 
     /// Service property
     #[dbus_proxy(property)]

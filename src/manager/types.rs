@@ -1,10 +1,9 @@
 use std::str::FromStr;
-
 use serde::{Deserialize, Serialize};
 use zbus::fdo;
-use zvariant::{OwnedObjectPath, OwnedValue, Signature, Structure, Type};
+use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
 
-use crate::IntoPath;
+use crate::{enum_impl_serde_str, enum_impl_str_conv, IntoPath};
 
 /// Basic user information
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
@@ -79,49 +78,13 @@ pub enum IsSupported {
     No,
     Challenge,
 }
-
-impl FromStr for IsSupported {
-    type Err = fdo::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let res = match s.trim() {
-            "na" => Self::NA,
-            "yes" => Self::Yes,
-            "no" => Self::No,
-            "challenge" => Self::Challenge,
-            _ => return Err(fdo::Error::IOError(format!("{} is an invalid variant", s))),
-        };
-        Ok(res)
-    }
-}
-
-impl From<IsSupported> for &str {
-    fn from(s: IsSupported) -> Self {
-        match s {
-            IsSupported::NA => "na",
-            IsSupported::Yes => "yes",
-            IsSupported::No => "no",
-            IsSupported::Challenge => "challenge",
-        }
-    }
-}
-
-impl Serialize for IsSupported {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
-        serializer.serialize_str((*self).into())
-    }
-}
-
-impl<'de> Deserialize<'de> for IsSupported {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de> {
-        let s = String::deserialize(deserializer)?;
-        IsSupported::from_str(s.as_str()).map_err(serde::de::Error::custom)
-    }
-}
+enum_impl_serde_str!(IsSupported);
+enum_impl_str_conv!(IsSupported, {
+    "na": NA,
+    "yes": Yes,
+    "no": No,
+    "challenge": Challenge,
+});
 
 #[derive(Debug, PartialEq, Clone, Type)]
 #[zvariant(signature = "s")]
@@ -139,8 +102,8 @@ impl FromStr for InhibitTypes {
     }
 }
 
-impl From<&InhibitTypes> for String {
-    fn from(s: &InhibitTypes) -> Self {
+impl From<InhibitTypes> for String {
+    fn from(s: InhibitTypes) -> Self {
         let mut string = String::new();
         for (i, inhibit) in s.0.iter().enumerate() {
             if i > 0 && i < s.0.len() {
@@ -152,9 +115,16 @@ impl From<&InhibitTypes> for String {
     }
 }
 
-impl From<InhibitTypes> for String {
-    fn from(s: InhibitTypes) -> Self {
-        String::from(&s)
+impl From<&InhibitTypes> for String {
+    fn from(s: &InhibitTypes) -> Self {
+        let mut string = String::new();
+        for (i, inhibit) in s.0.iter().enumerate() {
+            if i > 0 && i < s.0.len() {
+                string.push(':');
+            }
+            string.push_str((*inhibit).into());
+        }
+        string
     }
 }
 
@@ -186,55 +156,16 @@ pub enum InhibitType {
     HandleHibernateKey,
     HandleLidSwitch,
 }
-
-impl FromStr for InhibitType {
-    type Err = fdo::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let res = match s.trim() {
-            "shutdown" => Self::Shutdown,
-            "sleep" => Self::Sleep,
-            "idle" => Self::Idle,
-            "handle-power-key" => Self::HandlePowerKey,
-            "handle-suspend-key" => Self::HandleSuspendKey,
-            "handle-hibernate-key" => Self::HandleHibernateKey,
-            "handle-lid-switch" => Self::HandleLidSwitch,
-            _ => return Err(fdo::Error::IOError(format!("{} is an invalid variant", s))),
-        };
-        Ok(res)
-    }
-}
-
-impl From<InhibitType> for &str {
-    fn from(s: InhibitType) -> Self {
-        match s {
-            InhibitType::Shutdown => "shutdown",
-            InhibitType::Sleep => "sleep",
-            InhibitType::Idle => "idle",
-            InhibitType::HandlePowerKey => "handle-power-key",
-            InhibitType::HandleSuspendKey => "handle-suspend-key",
-            InhibitType::HandleHibernateKey => "handle-hibernate-key",
-            InhibitType::HandleLidSwitch => "handle-lid-switch",
-        }
-    }
-}
-
-impl Serialize for InhibitType {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
-        serializer.serialize_str((*self).into())
-    }
-}
-
-impl<'de> Deserialize<'de> for InhibitType {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de> {
-        let s = String::deserialize(deserializer)?;
-        InhibitType::from_str(s.as_str()).map_err(serde::de::Error::custom)
-    }
-}
+enum_impl_serde_str!(InhibitType);
+enum_impl_str_conv!(InhibitType, {
+    "shutdown": Shutdown,
+    "sleep": Sleep,
+    "idle": Idle,
+    "handle-power-key": HandlePowerKey,
+    "handle-suspend-key": HandleSuspendKey,
+    "handle-hibernate-key": HandleHibernateKey,
+    "handle-lid-switch": HandleLidSwitch,
+});
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct Inhibitor {
@@ -251,7 +182,7 @@ pub struct Inhibitor {
 }
 
 /// Used to determine behaviour of inhibitors
-#[derive(Debug, PartialEq, Clone, Type)]
+#[derive(Debug, PartialEq, Copy, Clone, Type)]
 #[zvariant(signature = "s")]
 pub enum Mode {
     /// Inhibitor is mandatory
@@ -259,51 +190,11 @@ pub enum Mode {
     /// Inhibitor delays to a certain time
     Delay,
 }
-
-impl FromStr for Mode {
-    type Err = fdo::Error;
-
-    fn from_str(m: &str) -> Result<Self, Self::Err> {
-        let res = match m {
-            "block" => Mode::Block,
-            "delay" => Mode::Delay,
-            _ => return Err(fdo::Error::IOError(format!("{} is an invalid variant", m))),
-        };
-        Ok(res)
-    }
-}
-
-impl From<&Mode> for &str {
-    fn from(m: &Mode) -> Self {
-        match m {
-            Mode::Block => "block",
-            Mode::Delay => "delay",
-        }
-    }
-}
-
-impl From<Mode> for &str {
-    fn from(s: Mode) -> Self {
-        <&str>::from(&s)
-    }
-}
-
-impl Serialize for Mode {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
-        serializer.serialize_str(self.into())
-    }
-}
-
-impl<'de> Deserialize<'de> for Mode {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de> {
-        let s = String::deserialize(deserializer)?;
-        Mode::from_str(s.as_str()).map_err(serde::de::Error::custom)
-    }
-}
+enum_impl_serde_str!(Mode);
+enum_impl_str_conv!(Mode, {
+    "block": Block,
+    "delay": Delay,
+});
 
 #[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
 pub struct SessionInfo {
@@ -348,35 +239,5 @@ impl IntoPath for SessionInfo {
 
     fn into_path_ref(&self) -> &OwnedObjectPath {
         &self.path
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
-pub struct SeatPath {
-    /// The seat label
-    id: String,
-    /// DBUS path for this seat
-    path: OwnedObjectPath,
-}
-
-impl SeatPath {
-    pub fn id(&self) -> &str {
-        &self.id
-    }
-
-    pub fn path(&self) -> &OwnedObjectPath {
-        &self.path
-    }
-}
-
-impl TryFrom<OwnedValue> for SeatPath {
-    type Error = zbus::Error;
-
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
-        let value = <Structure>::try_from(value)?;
-        return Ok(Self {
-            id: <String>::try_from(value.fields()[0].clone())?,
-            path: <OwnedObjectPath>::try_from(value.fields()[1].clone())?,
-        });
     }
 }

@@ -1,7 +1,9 @@
+use std::str::FromStr;
 use serde::{Deserialize, Serialize};
-use zvariant::{OwnedObjectPath, OwnedValue, Signature, Structure, Type};
+use zbus::fdo;
+use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
 
-use crate::IntoPath;
+use crate::{enum_impl_serde_str, enum_impl_str_conv, IntoPath, impl_try_from_owned_as_str};
 
 #[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
 pub struct User {
@@ -42,45 +44,25 @@ impl IntoPath for User {
     }
 }
 
-/// The type of Session. If `State::Invalid` then the response from
-/// logind was not well defined.
-#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+/// The type of Session
+#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[zvariant(signature = "s")]
 pub enum SessionType {
     X11,
     Wayland,
     MIR,
     TTY,
     Unspecified,
-    Invalid,
 }
-
-impl From<&str> for SessionType {
-    fn from(s: &str) -> Self {
-        match s {
-            "wayland" => SessionType::Wayland,
-            "x11" => SessionType::X11,
-            "mir" => SessionType::MIR,
-            "tty" => SessionType::TTY,
-            "unspecified" => SessionType::Unspecified,
-            _ => SessionType::Invalid,
-        }
-    }
-}
-
-impl TryFrom<OwnedValue> for SessionType {
-    type Error = zbus::Error;
-
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
-        let value = <String>::try_from(value)?;
-        return Ok(Self::from(value.as_str()));
-    }
-}
-
-impl Type for SessionType {
-    fn signature() -> zvariant::Signature<'static> {
-        Signature::from_str_unchecked("s")
-    }
-}
+enum_impl_serde_str!(SessionType);
+impl_try_from_owned_as_str!(SessionType);
+enum_impl_str_conv!(SessionType, {
+    "wayland": Wayland,
+    "x11": X11,
+    "mir": MIR,
+    "tty": TTY,
+    "unspecified": Unspecified,
+});
 
 #[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
 pub struct Device {
@@ -98,68 +80,34 @@ impl Device {
     }
 }
 
-/// Class of Session. If `SessionClass::Invalid` then the response from
-/// logind was not well defined.
-#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+/// Class of Session
+#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[zvariant(signature = "s")]
 pub enum SessionClass {
     User,
     Greeter,
     LockScreen,
-    Invalid,
 }
+enum_impl_serde_str!(SessionClass);
+impl_try_from_owned_as_str!(SessionClass);
+enum_impl_str_conv!(SessionClass, {
+    "user": User,
+    "greeter": Greeter,
+    "lock-screen": LockScreen,
+});
 
-impl From<&str> for SessionClass {
-    fn from(s: &str) -> Self {
-        match s.trim() {
-            "user" => Self::User,
-            "greeter" => Self::Greeter,
-            "lock-screen" => Self::LockScreen,
-            _ => Self::Invalid,
-        }
-    }
-}
-
-impl TryFrom<OwnedValue> for SessionClass {
-    type Error = zbus::Error;
-
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
-        let value = <String>::try_from(value)?;
-        return Ok(Self::from(value.as_str()));
-    }
-}
-
-/// State of a session. If `SessionState::Invalid` then the response from
-/// logind was not well defined.
-#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+/// State of a session
+#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[zvariant(signature = "s")]
 pub enum SessionState {
     Online,
     Active,
     Closing,
-    Invalid,
 }
-
-impl From<&str> for SessionState {
-    fn from(s: &str) -> Self {
-        match s.trim() {
-            "online" => Self::Online,
-            "active" => Self::Active,
-            "closing" => Self::Closing,
-            _ => Self::Invalid,
-        }
-    }
-}
-
-impl TryFrom<OwnedValue> for SessionState {
-    type Error = zbus::Error;
-
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
-        let value = <String>::try_from(value)?;
-        return Ok(Self::from(value.as_str()));
-    }
-}
-
-impl Type for SessionState {
-    fn signature() -> zvariant::Signature<'static> {
-        Signature::from_str_unchecked("s")
-    }
-}
+enum_impl_serde_str!(SessionState);
+impl_try_from_owned_as_str!(SessionState);
+enum_impl_str_conv!(SessionState, {
+    "online": Online,
+    "active": Active,
+    "closing": Closing,
+});

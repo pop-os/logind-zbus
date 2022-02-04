@@ -5,7 +5,8 @@ use std::{
     time::Duration,
 };
 
-use zvariant::{OwnedObjectPath, OwnedValue};
+use serde::{Deserialize, Serialize};
+use zvariant::{OwnedObjectPath, OwnedValue, Type, Structure};
 pub mod manager;
 pub mod seat;
 pub mod session;
@@ -42,6 +43,102 @@ impl TryFrom<OwnedValue> for TimeStamp {
         return Ok(Self(Duration::from_micros(value)));
     }
 }
+
+#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+pub struct SomePath {
+    /// The seat label
+    id: String,
+    /// DBUS path for this seat
+    path: OwnedObjectPath,
+}
+
+impl SomePath {
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    pub fn path(&self) -> &OwnedObjectPath {
+        &self.path
+    }
+}
+
+impl TryFrom<OwnedValue> for SomePath {
+    type Error = zbus::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let value = <Structure>::try_from(value)?;
+        return Ok(Self {
+            id: <String>::try_from(value.fields()[0].clone())?,
+            path: <OwnedObjectPath>::try_from(value.fields()[1].clone())?,
+        });
+    }
+}
+
+#[macro_export]
+macro_rules! enum_impl_serde_str {
+    ($type_name:ident) => {
+        impl Serialize for $type_name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer {
+                serializer.serialize_str(self.into())
+            }
+        }
+
+        impl<'de> Deserialize<'de> for $type_name {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                where
+                    D: serde::Deserializer<'de> {
+                let s = String::deserialize(deserializer)?;
+                $type_name::from_str(s.as_str()).map_err(serde::de::Error::custom)
+            }
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! impl_try_from_owned_as_str {
+    ($type_name:ident) => {
+        impl TryFrom<OwnedValue> for $type_name {
+            type Error = zbus::Error;
+
+            fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+                let value = <String>::try_from(value)?;
+                return Ok($type_name::from_str(value.as_str())?);
+            }
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! enum_impl_str_conv {
+    ($type_name:ident, { $($label:tt : $variant:tt,)* }) => {
+        impl FromStr for $type_name {
+            type Err = fdo::Error;
+
+            fn from_str(m: &str) -> Result<Self, Self::Err> {
+                let res = match m {
+                    $($label => $type_name::$variant,)+
+                    _ => return Err(fdo::Error::IOError(format!("{} is an invalid variant", m))),
+                };
+                Ok(res)
+            }
+        }
+
+        impl From<$type_name> for &str {
+            fn from(m: $type_name) -> Self {
+                match m {
+                    $($type_name::$variant => $label,)+
+                }
+            }
+        }
+
+        impl From<&$type_name> for &str {
+            fn from(s: &$type_name) -> Self {
+                <&str>::from(*s)
+            }
+        }
+}}
 
 #[cfg(test)]
 mod tests {

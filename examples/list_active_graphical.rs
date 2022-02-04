@@ -30,7 +30,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             })?;
                         }
                         SessionType::TTY | SessionType::Unspecified => {}
-                        SessionType::Invalid => panic!("session type response was bad"),
                     }
                     Ok(())
                 })?;

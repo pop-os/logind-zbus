@@ -1,6 +1,4 @@
 use futures_lite::future;
-use zbus::export::futures_util::TryFutureExt;
-
 use crate::manager::{InhibitType, ManagerProxy, ManagerProxyBlocking, Mode, IsSupported};
 
 #[test]

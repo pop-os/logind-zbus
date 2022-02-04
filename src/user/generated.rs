@@ -4,9 +4,9 @@
 
 use zbus::dbus_proxy;
 
-use crate::TimeStamp;
+use crate::{SomePath, TimeStamp};
 
-use super::{UserPath, UserState};
+use super::{UserState};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.User",
@@ -24,7 +24,7 @@ trait User {
     /// Display property
     #[dbus_proxy(property)]
     #[inline]
-    fn display(&self) -> zbus::Result<UserPath>;
+    fn display(&self) -> zbus::Result<SomePath>;
 
     /// GID property
     #[dbus_proxy(property)]
