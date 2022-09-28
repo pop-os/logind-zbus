@@ -10,7 +10,8 @@ use super::{Device, SessionClass, SessionState, SessionType, User};
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Session",
-    default_service = "org.freedesktop.login1"
+    default_service = "org.freedesktop.login1",
+    default_path = "/org/freedesktop/login1"
 )]
 trait Session {
     /// Activate method

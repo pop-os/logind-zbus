@@ -10,7 +10,8 @@ use super::SessionPath;
 
 #[dbus_proxy(
     interface = "org.freedesktop.login1.Seat",
-    default_service = "org.freedesktop.login1"
+    default_service = "org.freedesktop.login1",
+    default_path = "/org/freedesktop/login1"
 )]
 trait Seat {
     /// ActivateSession method
