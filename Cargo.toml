@@ -14,7 +14,7 @@ categories = ["os::unix-apis"]
 
 [dependencies]
 serde = "^1.0"
-zbus = "^2.1.0"
+zbus = "^3.1.0"
 zvariant = "^3.1.2"
 
 [dev-dependencies]
