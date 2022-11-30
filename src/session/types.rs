@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use zbus::fdo;
-use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
+use zbus::zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
 
 use crate::{enum_impl_serde_str, enum_impl_str_conv, impl_try_from_owned_as_str, IntoPath};
 
-#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Type, Serialize, Deserialize)]
 pub struct User {
     uid: u32,
     /// Name of session user
@@ -27,10 +27,10 @@ impl TryFrom<OwnedValue> for User {
 
     fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
         let value = <Structure>::try_from(value)?;
-        return Ok(Self {
+        Ok(Self {
             uid: <u32>::try_from(value.fields()[0].clone())?,
             path: <OwnedObjectPath>::try_from(value.fields()[1].clone())?,
-        });
+        })
     }
 }
 
@@ -45,7 +45,7 @@ impl IntoPath for User {
 }
 
 /// The type of Session
-#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Type)]
 #[zvariant(signature = "s")]
 pub enum SessionType {
     X11,
@@ -64,7 +64,7 @@ enum_impl_str_conv!(SessionType, {
     "unspecified": Unspecified,
 });
 
-#[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Type, Serialize, Deserialize)]
 pub struct Device {
     file_descriptor: std::os::unix::io::RawFd,
     inactive: bool,
@@ -81,7 +81,7 @@ impl Device {
 }
 
 /// Class of Session
-#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Type)]
 #[zvariant(signature = "s")]
 pub enum SessionClass {
     User,
@@ -97,7 +97,7 @@ enum_impl_str_conv!(SessionClass, {
 });
 
 /// State of a session
-#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Type)]
 #[zvariant(signature = "s")]
 pub enum SessionState {
     Online,

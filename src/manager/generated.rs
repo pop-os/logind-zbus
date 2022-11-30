@@ -3,7 +3,7 @@
 #![allow(non_snake_case)]
 
 use crate::SomePath;
-use zbus::dbus_proxy;
+use zbus::{dbus_proxy, zvariant};
 
 use super::{
     types::{Inhibitor, IsSupported, ScheduledShutdown},
@@ -317,7 +317,7 @@ trait Manager {
     #[inline]
     fn enable_wall_messages(&self) -> zbus::Result<bool>;
 
-    #[DBusProxy(property)]
+    #[dbus_proxy(property)]
     #[inline]
     fn set_enable_wall_messages(&self, value: bool) -> zbus::Result<()>;
 

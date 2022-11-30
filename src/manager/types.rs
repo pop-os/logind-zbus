@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use zbus::fdo;
-use zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
+use zbus::zvariant::{OwnedObjectPath, OwnedValue, Structure, Type};
 
 use crate::{enum_impl_serde_str, enum_impl_str_conv, IntoPath};
 
 /// Basic user information
-#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Type, Serialize, Deserialize)]
 pub struct UserInfo {
     /// User ID
     uid: u32,
@@ -40,7 +40,7 @@ impl IntoPath for UserInfo {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Type, Serialize, Deserialize)]
 pub struct ScheduledShutdown {
     /// Name of the shutdown
     id: String,
@@ -63,14 +63,14 @@ impl TryFrom<OwnedValue> for ScheduledShutdown {
 
     fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
         let value = <Structure>::try_from(value)?;
-        return Ok(Self {
+        Ok(Self {
             id: <String>::try_from(value.fields()[0].clone())?,
             time: <u64>::try_from(value.fields()[1].clone())?,
-        });
+        })
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Type)]
 #[zvariant(signature = "s")]
 pub enum IsSupported {
     NA,
@@ -86,7 +86,7 @@ enum_impl_str_conv!(IsSupported, {
     "challenge": Challenge,
 });
 
-#[derive(Debug, PartialEq, Clone, Type)]
+#[derive(Debug, PartialEq, Eq, Clone, Type)]
 #[zvariant(signature = "s")]
 pub struct InhibitTypes(Vec<InhibitType>);
 
@@ -147,7 +147,7 @@ impl<'de> Deserialize<'de> for InhibitTypes {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone, Type)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Type)]
 #[zvariant(signature = "s")]
 pub enum InhibitType {
     Shutdown,
@@ -169,7 +169,7 @@ enum_impl_str_conv!(InhibitType, {
     "handle-lid-switch": HandleLidSwitch,
 });
 
-#[derive(Debug, PartialEq, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Type, Serialize, Deserialize)]
 pub struct Inhibitor {
     /// What this lock is inhibiting
     what: InhibitTypes,
@@ -184,7 +184,7 @@ pub struct Inhibitor {
 }
 
 /// Used to determine behaviour of inhibitors
-#[derive(Debug, PartialEq, Copy, Clone, Type)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Type)]
 #[zvariant(signature = "s")]
 pub enum Mode {
     /// Inhibitor is mandatory
@@ -198,7 +198,7 @@ enum_impl_str_conv!(Mode, {
     "delay": Delay,
 });
 
-#[derive(Debug, PartialEq, Type, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Type, Serialize, Deserialize)]
 pub struct SessionInfo {
     /// Session ID
     sid: String,

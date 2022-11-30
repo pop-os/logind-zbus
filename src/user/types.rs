@@ -2,10 +2,10 @@ use crate::{enum_impl_serde_str, enum_impl_str_conv, impl_try_from_owned_as_str}
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use zbus::fdo;
-use zvariant::{OwnedValue, Type};
+use zbus::zvariant::{OwnedValue, Type};
 
 /// State of a User
-#[derive(Debug, PartialEq, Clone, Copy, Type)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Type)]
 #[zvariant(signature = "s")]
 pub enum UserState {
     Online,
